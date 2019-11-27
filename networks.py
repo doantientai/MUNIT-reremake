@@ -35,26 +35,37 @@ class MsImageDis(nn.Module):
         #     self.cnns.append(self._make_net())
 
         ## for the size 32x32, only one scale is used
-        # self.cnn = self._make_net()
-        dim = self.dim
-        cnn_x = []
-        cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
-        for i in range(self.n_layer - 1):
-            cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
-            dim *= 2
-        cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
-        self.cnn = nn.Sequential(*cnn_x)
+        self.dis_root = self._make_dis_root()
+        # dim = self.dim
+        # cnn_x = []
+        # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
+        # for i in range(self.n_layer - 1):
+        #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
+        #     dim *= 2
+        # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        # self.cnn = nn.Sequential(*cnn_x)
 
-    def _make_net(self):
+        self.dis_branch_D = self._make_branch_d()
+
+    def _make_branch_d(self):
         dim = self.dim
-        cnn_x = []
-        cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
         for i in range(self.n_layer - 1):
-            cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
             dim *= 2
-        cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
-        cnn_x = nn.Sequential(*cnn_x)
-        return cnn_x
+        cnn = []
+        cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
+
+    def _make_dis_root(self):
+        dim = self.dim
+        cnn = []
+        cnn += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
+        for i in range(self.n_layer - 1):
+            cnn += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
+            dim *= 2
+        # cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
 
     def forward(self, x):
         # dim = self.dim
@@ -66,8 +77,22 @@ class MsImageDis(nn.Module):
         # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
         # cnn_x = nn.Sequential(*cnn_x)
         outputs = []
-        output = self.cnn(x)
+        output_root = self.dis_root(x)
+        output = self.dis_branch_D(output_root)
         outputs.append(output)
+
+        # summary(self.dis_root, x.cpu().size()[1:], batch_size=x.cpu().size()[0])
+        # dot = make_dot(output_root, params=dict(self.dis_root.named_parameters()))
+        # dot.format = 'svg'
+        # dot.render('dis_root')
+        #
+        # summary(self.dis_branch_D, output_root.cpu().size()[1:], batch_size=output_root.cpu().size()[0])
+        # dot2 = make_dot(output, params=dict(self.dis_branch_D.named_parameters()))
+        # dot2.format = 'svg'
+        # dot2.render('dis_branch_D')
+        #
+        # exit()
+
         return outputs
 
     # def forward(self, x):
