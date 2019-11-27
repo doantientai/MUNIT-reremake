@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 import os
 import torch.nn.functional as F
-
+import numpy as np
 
 class NormalNLLLoss:
     """
@@ -154,7 +154,8 @@ class MUNIT_Trainer(nn.Module):
         for it, (out_fake) in enumerate(outs_fake):
             q_mu = out_fake['mu']
             q_var = out_fake['var']
-            loss += self.criterionQ_con(style_code[:, -num_cont_code:].view(-1, num_cont_code), q_mu, q_var) * 0.1
+            info_noise = style_code[:, -num_cont_code:].view(-1, num_cont_code).squeeze().squeeze()
+            loss += self.criterionQ_con(info_noise, q_mu, q_var) * 0.1
         return loss
 
     def compute_vgg_loss(self, vgg, img, target):
