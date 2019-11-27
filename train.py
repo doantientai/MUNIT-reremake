@@ -5,7 +5,7 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_loss, get_config, write_2images, Timer
 import argparse
 from torch.autograd import Variable
-from trainer import MUNIT_Trainer
+from trainer import MUNIT_Trainer, UNIT_Trainer
 import torch.backends.cudnn as cudnn
 import torch
 try:
@@ -19,7 +19,7 @@ import shutil
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/mnist2svhn_002_infoStyle', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_origin_mnist2svhn', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
