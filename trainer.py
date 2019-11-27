@@ -11,6 +11,22 @@ import os
 import torch.nn.functional as F
 
 
+class NormalNLLLoss:
+    """
+    Calculate the negative log likelihood
+    of normal distribution.
+    This needs to be minimised.
+
+    Treating Q(cj | x) as a factored Gaussian.
+    """
+
+    def __call__(self, x, mu, var):
+        logli = -0.5 * (var.mul(2 * np.pi) + 1e-6).log() - (x - mu).pow(2).div(var.mul(2.0) + 1e-6)
+        nll = -(logli.sum(1).mean())
+
+        return nll
+
+
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
         super(MUNIT_Trainer, self).__init__()
@@ -53,6 +69,7 @@ class MUNIT_Trainer(nn.Module):
                 param.requires_grad = False
 
         self.gan_type = hyperparameters['dis']['gan_type']
+        self.criterionQ_con = NormalNLLLoss()
 
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
@@ -106,6 +123,10 @@ class MUNIT_Trainer(nn.Module):
         x_ab_dis_out = self.dis_b(x_ab)
         self.loss_gen_adv_b = self.compute_gen_adv_loss(x_ab_dis_out)
 
+        # loss info continuous
+        self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
+        self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
+
         # domain-invariant perceptual loss
         self.loss_gen_vgg_a = self.compute_vgg_loss(self.vgg, x_ba, x_b) if hyperparameters['vgg_w'] > 0 else 0
         self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
@@ -121,9 +142,20 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
                               hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
                               hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
-                              hyperparameters['vgg_w'] * self.loss_gen_vgg_b
+                              hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
+                              self.info_cont_loss_a + \
+                              self.info_cont_loss_b
         self.loss_gen_total.backward()
         self.gen_opt.step()
+
+    def compute_info_cont_loss(self, style_code, outs_fake):
+        loss = 0
+        num_cont_code = 2
+        for it, (out_fake) in enumerate(outs_fake):
+            q_mu = out_fake['mu']
+            q_var = out_fake['var']
+            loss += self.criterionQ_con(style_code[:, -num_cont_code:].view(-1, num_cont_code), q_mu, q_var) * 0.1
+        return loss
 
     def compute_vgg_loss(self, vgg, img, target):
         img_vgg = vgg_preprocess(img)
@@ -188,7 +220,7 @@ class MUNIT_Trainer(nn.Module):
             out_fake = out_fake['output_d']
             out_real = out_real['output_d']
             if self.gan_type == 'lsgan':
-                loss += torch.mean((out_fake - 0)**2) + torch.mean((out_real - 1)**2)
+                loss += torch.mean((out_fake - 0) ** 2) + torch.mean((out_real - 1) ** 2)
             elif self.gan_type == 'nsgan':
                 all0 = Variable(torch.zeros_like(out_fake.data).cuda(), requires_grad=False)
                 all1 = Variable(torch.ones_like(out_real.data).cuda(), requires_grad=False)
@@ -205,7 +237,7 @@ class MUNIT_Trainer(nn.Module):
         for it, (out_fake) in enumerate(outs_fake):
             out_fake = out_fake['output_d']
             if self.gan_type == 'lsgan':
-                loss += torch.mean((out_fake - 1)**2) # LSGAN
+                loss += torch.mean((out_fake - 1) ** 2)  # LSGAN
             elif self.gan_type == 'nsgan':
                 all1 = Variable(torch.ones_like(out_fake.data).cuda(), requires_grad=False)
                 loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all1))
@@ -249,5 +281,3 @@ class MUNIT_Trainer(nn.Module):
         torch.save({'a': self.gen_a.state_dict(), 'b': self.gen_b.state_dict()}, gen_name)
         torch.save({'a': self.dis_a.state_dict(), 'b': self.dis_b.state_dict()}, dis_name)
         torch.save({'gen': self.gen_opt.state_dict(), 'dis': self.dis_opt.state_dict()}, opt_name)
-
-
