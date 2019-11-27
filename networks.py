@@ -44,8 +44,12 @@ class MsImageDis(nn.Module):
         #     dim *= 2
         # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
         # self.cnn = nn.Sequential(*cnn_x)
-
         self.dis_branch_D = self._make_branch_d()
+
+        self.dis_branch_Q = self._make_branch_q()
+        # self.conv_disc = nn.Conv2d(128, 10, 1)
+        self.conv_mu = nn.Conv2d(128, 2, 1)
+        self.conv_var = nn.Conv2d(128, 2, 1)
 
     def _make_branch_d(self):
         dim = self.dim
@@ -53,6 +57,15 @@ class MsImageDis(nn.Module):
             dim *= 2
         cnn = []
         cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
+
+    def _make_branch_q(self):
+        dim = self.dim
+        for i in range(self.n_layer - 1):
+            dim *= 2
+        cnn = []
+        cnn += [Conv2dBlock(dim, 128, 1, 1, norm='bn', activation=self.activ, pad_type=self.pad_type)]
         cnn = nn.Sequential(*cnn)
         return cnn
 
@@ -78,8 +91,21 @@ class MsImageDis(nn.Module):
         # cnn_x = nn.Sequential(*cnn_x)
         outputs = []
         output_root = self.dis_root(x)
-        output = self.dis_branch_D(output_root)
-        outputs.append(output)
+
+        output_d = self.dis_branch_D(output_root)
+
+        output_q = self.dis_branch_Q(output_root)
+        # disc_logits = self.conv_disc(output_q).squeeze()
+        mu = self.conv_mu(output_q).squeeze()
+        var = torch.exp(self.conv_var(output_q).squeeze())
+
+        output_wrap = {
+            "output_d": output_d,
+            "mu": mu,
+            "var": var
+        }
+
+        outputs.append(output_wrap)
 
         # summary(self.dis_root, x.cpu().size()[1:], batch_size=x.cpu().size()[0])
         # dot = make_dot(output_root, params=dict(self.dis_root.named_parameters()))

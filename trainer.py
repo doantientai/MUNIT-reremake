@@ -185,6 +185,8 @@ class MUNIT_Trainer(nn.Module):
         # outs1 = self.forward(input_real)
         loss = 0
         for it, (out_fake, out_real) in enumerate(zip(outs_fake, outs_real)):
+            out_fake = out_fake['output_d']
+            out_real = out_real['output_d']
             if self.gan_type == 'lsgan':
                 loss += torch.mean((out_fake - 0)**2) + torch.mean((out_real - 1)**2)
             elif self.gan_type == 'nsgan':
@@ -196,16 +198,17 @@ class MUNIT_Trainer(nn.Module):
                 assert 0, "Unsupported GAN type: {}".format(self.gan_type)
         return loss
 
-    def compute_gen_adv_loss(self, out_fake):
+    def compute_gen_adv_loss(self, outs_fake):
         # calculate the loss to train G
         # out_fake = self.forward(input_fake)
         loss = 0
-        for it, (out0) in enumerate(out_fake):
+        for it, (out_fake) in enumerate(outs_fake):
+            out_fake = out_fake['output_d']
             if self.gan_type == 'lsgan':
-                loss += torch.mean((out0 - 1)**2) # LSGAN
+                loss += torch.mean((out_fake - 1)**2) # LSGAN
             elif self.gan_type == 'nsgan':
-                all1 = Variable(torch.ones_like(out0.data).cuda(), requires_grad=False)
-                loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out0), all1))
+                all1 = Variable(torch.ones_like(out_fake.data).cuda(), requires_grad=False)
+                loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all1))
             else:
                 assert 0, "Unsupported GAN type: {}".format(self.gan_type)
         return loss
