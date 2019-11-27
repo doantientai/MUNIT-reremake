@@ -11,6 +11,7 @@ import os
 import torch.nn.functional as F
 import numpy as np
 
+
 class NormalNLLLoss:
     """
     Calculate the negative log likelihood
@@ -47,8 +48,34 @@ class MUNIT_Trainer(nn.Module):
         # Setup the optimizers
         beta1 = hyperparameters['beta1']
         beta2 = hyperparameters['beta2']
-        dis_params = list(self.dis_a.parameters()) + list(self.dis_b.parameters())
+        # dis_params = list(self.dis_a.parameters()) + list(self.dis_b.parameters())
         gen_params = list(self.gen_a.parameters()) + list(self.gen_b.parameters())
+
+        dis_named_params = list(self.dis_a.named_parameters()) + list(self.dis_b.named_parameters())
+        # gen_named_params = list(self.gen_a.named_parameters()) + list(self.gen_b.named_parameters())
+
+        ### modifying list params
+        dis_params = list()
+        # gen_params = list()
+        for name, param in dis_named_params:
+            if "_Q" in name:
+                print('%s --> gen_params' % name)
+                gen_params.append(param)
+            else:
+                dis_params.append(param)
+
+        # for name, param in gen_named_params:
+        #     gen_params.append(param)
+
+        # print('self.dis_a.named_parameters()')
+        # for name, param in self.dis_a.named_parameters():
+        #     if param.requires_grad:
+        #         if 'Q' in name:
+        #             print("\t" + name)
+        #         else:
+        #             print(name)
+        # exit()
+
         self.dis_opt = torch.optim.Adam([p for p in dis_params if p.requires_grad],
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
         self.gen_opt = torch.optim.Adam([p for p in gen_params if p.requires_grad],

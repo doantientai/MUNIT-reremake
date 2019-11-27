@@ -48,8 +48,8 @@ class MsImageDis(nn.Module):
 
         self.dis_branch_Q = self._make_branch_q()
         # self.conv_disc = nn.Conv2d(128, 10, 1)
-        self.conv_mu = nn.Conv2d(128, 2, 1)
-        self.conv_var = nn.Conv2d(128, 2, 1)
+        self.conv_mu_Q = nn.Conv2d(128, 2, 1)
+        self.conv_var_Q = nn.Conv2d(128, 2, 1)
 
     def _make_branch_d(self):
         dim = self.dim
@@ -97,8 +97,8 @@ class MsImageDis(nn.Module):
 
         output_q = self.dis_branch_Q(output_root)
         # disc_logits = self.conv_disc(output_q).squeeze()
-        mu = self.conv_mu(output_q).squeeze()
-        var = torch.exp(self.conv_var(output_q).squeeze())
+        mu = self.conv_mu_Q(output_q).squeeze()
+        var = torch.exp(self.conv_var_Q(output_q).squeeze())
 
         output_wrap = {
             "output_d": output_d,
