@@ -8,6 +8,8 @@ from torch.autograd import Variable
 import torch
 import torch.nn as nn
 import os
+import torch.nn.functional as F
+
 
 class MUNIT_Trainer(nn.Module):
     def __init__(self, hyperparameters):
@@ -49,6 +51,8 @@ class MUNIT_Trainer(nn.Module):
             self.vgg.eval()
             for param in self.vgg.parameters():
                 param.requires_grad = False
+
+        self.gan_type = hyperparameters['dis']['gan_type']
 
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
@@ -94,8 +98,14 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_cycrecon_x_a = self.recon_criterion(x_aba, x_a) if hyperparameters['recon_x_cyc_w'] > 0 else 0
         self.loss_gen_cycrecon_x_b = self.recon_criterion(x_bab, x_b) if hyperparameters['recon_x_cyc_w'] > 0 else 0
         # GAN loss
-        self.loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
-        self.loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
+        # self.loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
+        x_ba_dis_out = self.dis_a(x_ba)
+        self.loss_gen_adv_a = self.compute_gen_adv_loss(x_ba_dis_out)
+
+        # self.loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
+        x_ab_dis_out = self.dis_a(x_ab)
+        self.loss_gen_adv_b = self.compute_gen_adv_loss(x_ab_dis_out)
+
         # domain-invariant perceptual loss
         self.loss_gen_vgg_a = self.compute_vgg_loss(self.vgg, x_ba, x_b) if hyperparameters['vgg_w'] > 0 else 0
         self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
@@ -154,12 +164,51 @@ class MUNIT_Trainer(nn.Module):
         # decode (cross domain)
         x_ba = self.gen_a.decode(c_b, s_a)
         x_ab = self.gen_b.decode(c_a, s_b)
+
         # D loss
-        self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
-        self.loss_dis_b = self.dis_b.calc_dis_loss(x_ab.detach(), x_b)
+        # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
+        x_ba_dis_out = self.dis_a(x_ba.detach())
+        x_a_dis_out = self.dis_a(x_a)
+        self.loss_dis_a = self.compute_dis_loss(x_ba_dis_out, x_a_dis_out)
+        # self.loss_dis_b = self.dis_b.calc_dis_loss(x_ab.detach(), x_b)
+        x_ab_dis_out = self.dis_b(x_ab.detach())
+        x_b_dis_out = self.dis_b(x_b)
+        self.loss_dis_b = self.compute_dis_loss(x_ab_dis_out, x_b_dis_out)
+
         self.loss_dis_total = hyperparameters['gan_w'] * self.loss_dis_a + hyperparameters['gan_w'] * self.loss_dis_b
         self.loss_dis_total.backward()
         self.dis_opt.step()
+
+    def compute_dis_loss(self, outs_fake, outs_real):
+        # calculate the loss to train D
+        # outs0 = self.forward(input_fake)
+        # outs1 = self.forward(input_real)
+        loss = 0
+        for it, (out_fake, out_real) in enumerate(zip(outs_fake, outs_real)):
+            if self.gan_type == 'lsgan':
+                loss += torch.mean((out_fake - 0)**2) + torch.mean((out_real - 1)**2)
+            elif self.gan_type == 'nsgan':
+                all0 = Variable(torch.zeros_like(out_fake.data).cuda(), requires_grad=False)
+                all1 = Variable(torch.ones_like(out_real.data).cuda(), requires_grad=False)
+                loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all0) +
+                                   F.binary_cross_entropy(F.sigmoid(out_real), all1))
+            else:
+                assert 0, "Unsupported GAN type: {}".format(self.gan_type)
+        return loss
+
+    def compute_gen_adv_loss(self, out_fake):
+        # calculate the loss to train G
+        # out_fake = self.forward(input_fake)
+        loss = 0
+        for it, (out0) in enumerate(out_fake):
+            if self.gan_type == 'lsgan':
+                loss += torch.mean((out0 - 1)**2) # LSGAN
+            elif self.gan_type == 'nsgan':
+                all1 = Variable(torch.ones_like(out0.data).cuda(), requires_grad=False)
+                loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out0), all1))
+            else:
+                assert 0, "Unsupported GAN type: {}".format(self.gan_type)
+        return loss
 
     def update_learning_rate(self):
         if self.dis_scheduler is not None:
