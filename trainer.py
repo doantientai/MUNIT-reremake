@@ -103,7 +103,7 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_adv_a = self.compute_gen_adv_loss(x_ba_dis_out)
 
         # self.loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
-        x_ab_dis_out = self.dis_a(x_ab)
+        x_ab_dis_out = self.dis_b(x_ab)
         self.loss_gen_adv_b = self.compute_gen_adv_loss(x_ab_dis_out)
 
         # domain-invariant perceptual loss
