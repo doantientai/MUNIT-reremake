@@ -49,24 +49,26 @@ def get_all_data_loaders(conf):
     height = conf['crop_image_height']
     width = conf['crop_image_width']
 
-    if 'data_root' in conf:
+    # if 'data_root' in conf:
+    assert 'data_root' in conf
+    if True:
         train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
-                                              new_size_a, height, width, num_workers, True)
+                                              new_size_a, height, width, num_workers, True, flip_lf=False)
         test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size, False,
                                              new_size_a, new_size_a, new_size_a, num_workers, True)
         train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'trainB'), batch_size, True,
-                                              new_size_b, height, width, num_workers, True)
+                                              new_size_b, height, width, num_workers, True, flip_lf=False)
         test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'testB'), batch_size, False,
                                              new_size_b, new_size_b, new_size_b, num_workers, True)
-    else:
-        train_loader_a = get_data_loader_list(conf['data_folder_train_a'], conf['data_list_train_a'], batch_size, True,
-                                                new_size_a, height, width, num_workers, True)
-        test_loader_a = get_data_loader_list(conf['data_folder_test_a'], conf['data_list_test_a'], batch_size, False,
-                                                new_size_a, new_size_a, new_size_a, num_workers, True)
-        train_loader_b = get_data_loader_list(conf['data_folder_train_b'], conf['data_list_train_b'], batch_size, True,
-                                                new_size_b, height, width, num_workers, True)
-        test_loader_b = get_data_loader_list(conf['data_folder_test_b'], conf['data_list_test_b'], batch_size, False,
-                                                new_size_b, new_size_b, new_size_b, num_workers, True)
+    # else:
+    #     train_loader_a = get_data_loader_list(conf['data_folder_train_a'], conf['data_list_train_a'], batch_size, True,
+    #                                             new_size_a, height, width, num_workers, True)
+    #     test_loader_a = get_data_loader_list(conf['data_folder_test_a'], conf['data_list_test_a'], batch_size, False,
+    #                                             new_size_a, new_size_a, new_size_a, num_workers, True)
+    #     train_loader_b = get_data_loader_list(conf['data_folder_train_b'], conf['data_list_train_b'], batch_size, True,
+    #                                             new_size_b, height, width, num_workers, True)
+    #     test_loader_b = get_data_loader_list(conf['data_folder_test_b'], conf['data_list_test_b'], batch_size, False,
+    #                                             new_size_b, new_size_b, new_size_b, num_workers, True)
     return train_loader_a, train_loader_b, test_loader_a, test_loader_b
 
 
@@ -83,14 +85,18 @@ def get_data_loader_list(root, file_list, batch_size, train, new_size=None,
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
 
+
 def get_data_loader_folder(input_folder, batch_size, train, new_size=None,
-                           height=256, width=256, num_workers=4, crop=True):
+                           height=256, width=256, num_workers=4, crop=True, flip_lf=True):
     transform_list = [transforms.ToTensor(),
                       transforms.Normalize((0.5, 0.5, 0.5),
                                            (0.5, 0.5, 0.5))]
     transform_list = [transforms.RandomCrop((height, width))] + transform_list if crop else transform_list
     transform_list = [transforms.Resize(new_size)] + transform_list if new_size is not None else transform_list
-    transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
+    # transform_list = [transforms.RandomHorizontalFlip()] + transform_list if train else transform_list
+    if train and flip_lf:
+        transform_list = [transforms.RandomHorizontalFlip()] + transform_list
+
     transform = transforms.Compose(transform_list)
     dataset = ImageFolder(input_folder, transform=transform)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
