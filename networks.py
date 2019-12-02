@@ -6,8 +6,8 @@ from torch import nn
 from torch.autograd import Variable
 import torch
 import torch.nn.functional as F
-from torchsummary import summary
-from torchviz import make_dot
+# from torchsummary import summary
+# from torchviz import make_dot
 try:
     from itertools import izip as zip
 except ImportError: # will be 3.x series
