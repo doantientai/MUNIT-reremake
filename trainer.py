@@ -10,6 +10,7 @@ import torch.nn as nn
 import os
 import torch.nn.functional as F
 import numpy as np
+import pytorch_msssim
 
 
 class NormalNLLLoss:
@@ -98,6 +99,9 @@ class MUNIT_Trainer(nn.Module):
         self.gan_type = hyperparameters['dis']['gan_type']
         self.criterionQ_con = NormalNLLLoss()
 
+        self.m = pytorch_msssim.MSSSIM()
+
+
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
 
@@ -157,6 +161,11 @@ class MUNIT_Trainer(nn.Module):
         # domain-invariant perceptual loss
         self.loss_gen_vgg_a = self.compute_vgg_loss(self.vgg, x_ba, x_b) if hyperparameters['vgg_w'] > 0 else 0
         self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
+
+        # ssim loss
+        self.loss_ssim_a = self.compute_ssim_loss(x_a, x_ab)
+        self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
+
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
                               hyperparameters['gan_w'] * self.loss_gen_adv_b + \
@@ -171,9 +180,15 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
                               hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
                               self.info_cont_loss_a + \
-                              self.info_cont_loss_b
+                              self.info_cont_loss_b + \
+                              self.loss_ssim_a + \
+                              self.loss_ssim_b
+
         self.loss_gen_total.backward()
         self.gen_opt.step()
+
+    def compute_ssim_loss(self, img1, img2):
+        return self.m(img1, img2)
 
     def compute_info_cont_loss(self, style_code, outs_fake):
         loss = 0
