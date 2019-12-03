@@ -99,9 +99,6 @@ class MUNIT_Trainer(nn.Module):
         self.gan_type = hyperparameters['dis']['gan_type']
         self.criterionQ_con = NormalNLLLoss()
 
-        self.m = pytorch_msssim.MSSSIM()
-
-
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
 
@@ -163,8 +160,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
 
         # ssim loss
-        self.loss_ssim_a = self.compute_ssim_loss(x_a, x_ab)
-        self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
+        self.loss_ssim_a = self.compute_ssim_loss(x_a, x_a_recon)
+        self.loss_ssim_b = self.compute_ssim_loss(x_b, x_b_recon)
 
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
@@ -187,8 +184,17 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_total.backward()
         self.gen_opt.step()
 
-    def compute_ssim_loss(self, img1, img2):
-        return self.m(img1, img2)
+    def compute_ssim_loss(self, tensor_1, tensor_2):
+        # print("tensor_1")
+        # print(tensor_1.size())
+        # print("tensor_2")
+        # print(tensor_2.size())
+        # exit()
+        loss = 0
+        for image_1, image_2 in zip(tensor_1, tensor_2):
+            loss += pytorch_msssim.msssim(image_1.unsqueeze(0), image_2.unsqueeze(0), normalize=True)
+        print('loss:', loss.cpu().detach().numpy())
+        return loss
 
     def compute_info_cont_loss(self, style_code, outs_fake):
         loss = 0
