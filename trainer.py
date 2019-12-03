@@ -189,13 +189,27 @@ class MUNIT_Trainer(nn.Module):
         # print(tensor_1.size())
         # print("tensor_2")
         # print(tensor_2.size())
+
+        tensor_1_gray = tensor_1.mean(1)
+        tensor_1_gray = tensor_1_gray.unsqueeze(1)
+
+        tensor_2_gray = tensor_2.mean(1)
+        tensor_2_gray = tensor_2_gray.unsqueeze(1)
+
+        # print("tensor_1_gray")
+        # print(tensor_1_gray.size())
+        # print("tensor_2_gray")
+        # print(tensor_2_gray.size())
+
         # exit()
+
         # loss = 0
         # for image_1, image_2 in zip(tensor_1, tensor_2):
         #     loss += pytorch_msssim.msssim(image_1.unsqueeze(0), image_2.unsqueeze(0), normalize=True)
         # print('loss:', loss.cpu().detach().numpy())
         ### on shot (let's see what will happen)
-        loss = pytorch_msssim.msssim(tensor_1, tensor_2, normalize=True)
+
+        loss = pytorch_msssim.msssim(tensor_1_gray, tensor_2_gray, normalize=True)
         return loss
 
     def compute_info_cont_loss(self, style_code, outs_fake):
