@@ -178,8 +178,8 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
                               self.info_cont_loss_a + \
                               self.info_cont_loss_b + \
-                              self.loss_ssim_a + \
-                              self.loss_ssim_b
+                              0.5 * self.loss_ssim_a + \
+                              0.5 * self.loss_ssim_b
 
         self.loss_gen_total.backward()
         self.gen_opt.step()
