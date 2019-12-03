@@ -160,8 +160,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
 
         # ssim loss
-        self.loss_ssim_a = self.compute_ssim_loss(x_a, x_a_recon)
-        self.loss_ssim_b = self.compute_ssim_loss(x_b, x_b_recon)
+        self.loss_ssim_a = self.compute_ssim_loss(x_a, x_ab)
+        self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
 
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
@@ -178,8 +178,8 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
                               self.info_cont_loss_a + \
                               self.info_cont_loss_b + \
-                              0.5 * self.loss_ssim_a + \
-                              0.5 * self.loss_ssim_b
+                              0.1 * self.loss_ssim_a + \
+                              0.1 * self.loss_ssim_b
 
         self.loss_gen_total.backward()
         self.gen_opt.step()
@@ -193,7 +193,7 @@ class MUNIT_Trainer(nn.Module):
         loss = 0
         for image_1, image_2 in zip(tensor_1, tensor_2):
             loss += pytorch_msssim.msssim(image_1.unsqueeze(0), image_2.unsqueeze(0), normalize=True)
-        print('loss:', loss.cpu().detach().numpy())
+        # print('loss:', loss.cpu().detach().numpy())
         return loss
 
     def compute_info_cont_loss(self, style_code, outs_fake):
