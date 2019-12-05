@@ -8,6 +8,7 @@ from networks import Vgg16
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torchvision import transforms
+from torchvision.datasets.folder import ImageFolder as ImageFolderTorchVision
 from data import ImageFilelist, ImageFolder
 import torch
 import torch.nn as nn
@@ -98,7 +99,8 @@ def get_data_loader_folder(input_folder, batch_size, train, new_size=None,
         transform_list = [transforms.RandomHorizontalFlip()] + transform_list
 
     transform = transforms.Compose(transform_list)
-    dataset = ImageFolder(input_folder, transform=transform)
+    # dataset = ImageFolder(input_folder, transform=transform)
+    dataset = ImageFolderTorchVision(input_folder, transform=transform)
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
 
