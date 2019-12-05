@@ -141,8 +141,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_recon_s_b = self.recon_criterion(s_b_recon, s_b)
         self.loss_gen_recon_c_a = self.recon_criterion(c_a_recon, c_a)
         self.loss_gen_recon_c_b = self.recon_criterion(c_b_recon, c_b)
-        self.loss_gen_cycrecon_x_a = self.recon_criterion(x_aba, x_a) if hyperparameters['recon_x_cyc_w'] > 0 else 0
-        self.loss_gen_cycrecon_x_b = self.recon_criterion(x_bab, x_b) if hyperparameters['recon_x_cyc_w'] > 0 else 0
+        # self.loss_gen_cycrecon_x_a = self.recon_criterion(x_aba, x_a) if hyperparameters['recon_x_cyc_w'] > 0 else 0
+        # self.loss_gen_cycrecon_x_b = self.recon_criterion(x_bab, x_b) if hyperparameters['recon_x_cyc_w'] > 0 else 0
         # GAN loss
         # self.loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
         x_ba_dis_out = self.dis_a(x_ba)
@@ -156,13 +156,13 @@ class MUNIT_Trainer(nn.Module):
         self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
         self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
 
-        # domain-invariant perceptual loss
-        self.loss_gen_vgg_a = self.compute_vgg_loss(self.vgg, x_ba, x_b) if hyperparameters['vgg_w'] > 0 else 0
-        self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
+        # # domain-invariant perceptual loss
+        # self.loss_gen_vgg_a = self.compute_vgg_loss(self.vgg, x_ba, x_b) if hyperparameters['vgg_w'] > 0 else 0
+        # self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
 
         # ssim loss
-        self.loss_ssim_a = self.compute_ssim_loss(x_a, x_ab)
-        self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
+        # self.loss_ssim_a = self.compute_ssim_loss(x_a, x_ab)
+        # self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
 
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
@@ -173,45 +173,45 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_b + \
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_b + \
                               hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
-                              hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
-                              hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
-                              hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
-                              hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
                               self.info_cont_loss_a + \
                               self.info_cont_loss_b
+                              # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
+                              # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
+                              # hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
+                              # hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
                               # 0.1 * self.loss_ssim_a + \
                               # 0.1 * self.loss_ssim_b
 
         self.loss_gen_total.backward()
         self.gen_opt.step()
 
-    def compute_ssim_loss(self, tensor_1, tensor_2):
-        # print("tensor_1")
-        # print(tensor_1.size())
-        # print("tensor_2")
-        # print(tensor_2.size())
-
-        tensor_1_gray = tensor_1.mean(1)
-        tensor_1_gray = tensor_1_gray.unsqueeze(1)
-
-        tensor_2_gray = tensor_2.mean(1)
-        tensor_2_gray = tensor_2_gray.unsqueeze(1)
-
-        # print("tensor_1_gray")
-        # print(tensor_1_gray.size())
-        # print("tensor_2_gray")
-        # print(tensor_2_gray.size())
-
-        # exit()
-
-        # loss = 0
-        # for image_1, image_2 in zip(tensor_1, tensor_2):
-        #     loss += pytorch_msssim.msssim(image_1.unsqueeze(0), image_2.unsqueeze(0), normalize=True)
-        # print('loss:', loss.cpu().detach().numpy())
-        ### on shot (let's see what will happen)
-
-        loss = pytorch_msssim.msssim(tensor_1_gray, tensor_2_gray, normalize=True)
-        return loss
+    # def compute_ssim_loss(self, tensor_1, tensor_2):
+    #     # print("tensor_1")
+    #     # print(tensor_1.size())
+    #     # print("tensor_2")
+    #     # print(tensor_2.size())
+    #
+    #     tensor_1_gray = tensor_1.mean(1)
+    #     tensor_1_gray = tensor_1_gray.unsqueeze(1)
+    #
+    #     tensor_2_gray = tensor_2.mean(1)
+    #     tensor_2_gray = tensor_2_gray.unsqueeze(1)
+    #
+    #     # print("tensor_1_gray")
+    #     # print(tensor_1_gray.size())
+    #     # print("tensor_2_gray")
+    #     # print(tensor_2_gray.size())
+    #
+    #     # exit()
+    #
+    #     # loss = 0
+    #     # for image_1, image_2 in zip(tensor_1, tensor_2):
+    #     #     loss += pytorch_msssim.msssim(image_1.unsqueeze(0), image_2.unsqueeze(0), normalize=True)
+    #     # print('loss:', loss.cpu().detach().numpy())
+    #     ### on shot (let's see what will happen)
+    #
+    #     loss = pytorch_msssim.msssim(tensor_1_gray, tensor_2_gray, normalize=True)
+    #     return loss
 
     def compute_info_cont_loss(self, style_code, outs_fake):
         loss = 0
