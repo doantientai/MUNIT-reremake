@@ -8,8 +8,8 @@ from networks import Vgg16
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torchvision import transforms
-from torchvision.datasets.folder import ImageFolder as ImageFolderTorchVision
-from data import ImageFilelist, ImageFolder
+# from torchvision.datasets.folder import ImageFolder as ImageFolderTorchVision
+from data import ImageFilelist, ImageFolder, ImageFolderTorchVision
 import torch
 import torch.nn as nn
 import os

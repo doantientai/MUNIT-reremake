@@ -60,6 +60,9 @@ while True:
     for it, (samples_a, samples_b) in enumerate(zip(train_loader_a, train_loader_b)):
         images_a, labels_a = samples_a
         images_b, labels_b = samples_b
+        # print(labels_a)
+        # exit()
+
         trainer.update_learning_rate()
         images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
 
@@ -67,6 +70,7 @@ while True:
             # Main training code
             trainer.dis_update(images_a, images_b, config)
             trainer.gen_update(images_a, images_b, config)
+
             torch.cuda.synchronize()
 
         # Dump training stats in log file

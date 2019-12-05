@@ -3,7 +3,9 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 import torch.utils.data as data
+from torchvision.datasets.folder import DatasetFolder
 import os.path
+
 
 def default_loader(path):
     return Image.open(path).convert('RGB')
@@ -63,6 +65,7 @@ class ImageLabelFilelist(data.Dataset):
     def __len__(self):
         return len(self.imgs)
 
+
 ###############################################################################
 # Code from
 # https://github.com/pytorch/vision/blob/master/torchvision/datasets/folder.py
@@ -105,9 +108,9 @@ class ImageFolder(data.Dataset):
                  loader=default_loader):
         imgs = sorted(make_dataset(root))
         if len(imgs) == 0:
-            raise(RuntimeError("Found 0 images in: " + root + "\n"
-                               "Supported image extensions are: " +
-                               ",".join(IMG_EXTENSIONS)))
+            raise (RuntimeError("Found 0 images in: " + root + "\n"
+                                                               "Supported image extensions are: " +
+                                ",".join(IMG_EXTENSIONS)))
 
         self.root = root
         self.imgs = imgs
@@ -128,31 +131,36 @@ class ImageFolder(data.Dataset):
     def __len__(self):
         return len(self.imgs)
 
-class ImageFolderWithLabel(data.Dataset):
 
-    def __init__(self, root, transform=None, return_paths=False,
+class ImageFolderTorchVision(DatasetFolder):
+    """A generic data loader where the images are arranged in this way: ::
+
+        root/dog/xxx.png
+        root/dog/xxy.png
+        root/dog/xxz.png
+
+        root/cat/123.png
+        root/cat/nsdf3.png
+        root/cat/asd932_.png
+
+    Args:
+        root (string): Root directory path.
+        transform (callable, optional): A function/transform that  takes in an PIL image
+            and returns a transformed version. E.g, ``transforms.RandomCrop``
+        target_transform (callable, optional): A function/transform that takes in the
+            target and transforms it.
+        loader (callable, optional): A function to load an image given its path.
+
+     Attributes:
+        classes (list): List of the class names.
+        class_to_idx (dict): Dict with items (class_name, class_index).
+        imgs (list): List of (image path, class_index) tuples
+    """
+
+    def __init__(self, root, transform=None, target_transform=None,
                  loader=default_loader):
-        imgs = sorted(make_dataset(root))
-        if len(imgs) == 0:
-            raise(RuntimeError("Found 0 images in: " + root + "\n"
-                               "Supported image extensions are: " +
-                               ",".join(IMG_EXTENSIONS)))
-
-        self.root = root
-        self.imgs = imgs
-        self.transform = transform
-        self.return_paths = return_paths
-        self.loader = loader
-
-    def __getitem__(self, index):
-        path = self.imgs[index]
-        img = self.loader(path)
-        if self.transform is not None:
-            img = self.transform(img)
-        if self.return_paths:
-            return img, path
-        else:
-            return img
-
-    def __len__(self):
-        return len(self.imgs)
+        super(ImageFolderTorchVision, self).__init__(root, loader, IMG_EXTENSIONS,
+                                                     transform=transform,
+                                                     target_transform=target_transform)
+        self.targets = [x[1] for x in self.samples]
+        self.imgs = self.samples
