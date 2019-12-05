@@ -20,7 +20,7 @@ import shutil
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
-parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/InfoMUNIT_content_classifier_init', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
@@ -65,11 +65,13 @@ while True:
 
         trainer.update_learning_rate()
         images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
+        labels_a, labels_b = labels_a.cuda().detach(), labels_b.cuda().detach()
 
         with Timer("Elapsed time in update: %f"):
             # Main training code
             trainer.dis_update(images_a, images_b, config)
             trainer.gen_update(images_a, images_b, config)
+            trainer.cla_update([images_a, labels_a], [images_b, labels_b], config)
 
             torch.cuda.synchronize()
 

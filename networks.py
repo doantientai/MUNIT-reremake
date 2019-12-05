@@ -17,6 +17,36 @@ except ImportError: # will be 3.x series
 # Discriminator
 ##################################################################################
 
+class ContentClassifier(nn.Module):
+    # Classifier which is built for classifying on the content space
+    def __init__(self, input_dim, params):
+        super().__init__()
+        self.n_layers = 2
+        self.n_classes = 10
+        self.dim = input_dim
+        self.cnn = self._make_cnn()
+
+    class Flatten(nn.Module):
+        def forward(self, input):
+            return input.view(input.size(0), -1)
+
+    def _make_cnn(self):
+        dim = self.dim
+        for i in range(self.n_layers - 1):
+            dim *= 2
+        cnn = []
+        cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn += [self.Flatten()]
+        cnn += [nn.Linear(1*16*16, self.n_classes)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
+
+    def forward(self, x):
+        result = self.cnn(x)
+        return result
+
+
+
 class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture
     def __init__(self, input_dim, params):
@@ -204,6 +234,8 @@ class AdaINGen(nn.Module):
         return images_recon
 
     def encode(self, images):
+        # print("images")
+        # print(images.size())
         # encode an image to its content and style codes
         style_fake = self.enc_style(images)
         content = self.enc_content(images)
