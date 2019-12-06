@@ -303,12 +303,11 @@ class MUNIT_Trainer(nn.Module):
 
         self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
         self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
-        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon,
-                                                                                         label_predict_c_a)
+        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
 
         self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
-        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon,
+        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
                                                                                          label_predict_c_b)
 
         self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
@@ -365,6 +364,18 @@ class MUNIT_Trainer(nn.Module):
 
     def compute_content_classifier_loss(self, label_predict, label_true):
         loss = self.criterion_content_classifier(label_predict, label_true)
+        # print("compute_content_classifier_loss")
+        # print(loss.size())
+        # exit()
+        return loss
+
+    def compute_content_classifier_two_predictions_loss(self, label_predict_1, label_predict_2):
+        # loss = self.criterion_content_classifier(label_predict, label_true)
+        # print(label_predict_1.size())
+        # print(label_predict_2.size())
+        loss = torch.mean(torch.abs(label_predict_1 - label_predict_2))
+        # print(loss.size())
+        # exit()
         return loss
 
     def compute_content_classifier_accuracy(self, label_predict, label_true):

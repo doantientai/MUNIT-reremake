@@ -43,7 +43,7 @@ def get_display_images(loader):
             image = loader.dataset[i][0]
             list_images.append(image)
             list_classes_to_take.remove(label)
-            print(list_classes_to_take)
+            # print(list_classes_to_take)
     return torch.stack(list_images).cuda()
     # train_display_images_a = torch.stack([loader.dataset[i][0]]).cuda()
 
