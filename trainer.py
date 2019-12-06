@@ -101,7 +101,6 @@ class MUNIT_Trainer(nn.Module):
 
         self.batch_size = hyperparameters['batch_size']
 
-
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
 
@@ -116,7 +115,10 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_ab, x_ba
 
-    def gen_update(self, x_a, x_b, hyperparameters):
+    def gen_update(self, sample_a, sample_b, hyperparameters):
+        x_a, label_a = sample_a
+        x_b, label_b = sample_b
+
         self.gen_opt.zero_grad()
         s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
         s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
@@ -167,6 +169,17 @@ class MUNIT_Trainer(nn.Module):
         # self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
 
         # total loss
+
+        label_predict_c_a = self.content_classifier(c_a)
+        label_predict_c_a_recon = self.content_classifier(c_a_recon)
+        label_predict_c_b = self.content_classifier(c_b)
+        label_predict_c_b_recon = self.content_classifier(c_b_recon)
+
+        loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+        loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
                               hyperparameters['gan_w'] * self.loss_gen_adv_b + \
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_a + \
@@ -176,13 +189,17 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_b + \
                               hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
                               self.info_cont_loss_a + \
-                              self.info_cont_loss_b
-                              # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
-                              # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
-                              # hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
-                              # hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
-                              # 0.1 * self.loss_ssim_a + \
-                              # 0.1 * self.loss_ssim_b
+                              self.info_cont_loss_b + \
+                              loss_content_classifier_c_a + \
+                              loss_content_classifier_c_a_recon + \
+                              loss_content_classifier_b + \
+                              loss_content_classifier_c_b_recon
+        # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
+        # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
+        # hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
+        # hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
+        # 0.1 * self.loss_ssim_a + \
+        # 0.1 * self.loss_ssim_b
 
         self.loss_gen_total.backward()
         self.gen_opt.step()
@@ -280,12 +297,27 @@ class MUNIT_Trainer(nn.Module):
         c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
 
         label_predict_c_a = self.content_classifier(c_a)
-        loss_content_classifier_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
-
+        label_predict_c_a_recon = self.content_classifier(c_a_recon)
         label_predict_c_b = self.content_classifier(c_b)
-        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        label_predict_c_b_recon = self.content_classifier(c_b_recon)
 
-        self.accu_content_classifier = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
+        loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+        loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+
+        self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
+        self.accu_content_classifier_c_a_recon = self.compute_content_classifier_accuracy(label_predict_c_a_recon,
+                                                                                          label_a)
+        self.accu_content_classifier_c_b = self.compute_content_classifier_accuracy(label_predict_c_b, label_b)
+        self.accu_content_classifier_c_b_recon = self.compute_content_classifier_accuracy(label_predict_c_b_recon,
+                                                                                          label_b)
+        self.accu_CC_all = self.mean_list([
+            self.accu_content_classifier_c_a,
+            self.accu_content_classifier_c_a_recon,
+            self.accu_content_classifier_c_b,
+            self.accu_content_classifier_c_b_recon
+        ])
 
         # print("label_a")
         # print(label_a.size())
@@ -295,7 +327,6 @@ class MUNIT_Trainer(nn.Module):
         # print(label_predict_c_a.size())
         # print(label_predict_c_a[0].sum())
         # exit()
-
 
         # # D loss
         # # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
@@ -307,9 +338,13 @@ class MUNIT_Trainer(nn.Module):
         # x_b_dis_out = self.dis_b(x_b)
         # self.loss_dis_b = self.compute_dis_loss(x_ab_dis_out, x_b_dis_out)
 
-        self.loss_cla_total = loss_content_classifier_a + loss_content_classifier_b
+        self.loss_cla_total = loss_content_classifier_c_a + loss_content_classifier_c_a_recon + loss_content_classifier_b + loss_content_classifier_c_b_recon
         self.loss_cla_total.backward()
         self.cla_opt.step()
+
+    @staticmethod
+    def mean_list(lst):
+        return sum(lst) / len(lst)
 
     def dis_update(self, x_a, x_b, hyperparameters):
         # print('dis_update')
@@ -370,8 +405,6 @@ class MUNIT_Trainer(nn.Module):
         #
         # exit()
         return accuracy
-
-
 
     def compute_dis_loss(self, outs_fake, outs_real):
         # calculate the loss to train D
