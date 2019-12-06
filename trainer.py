@@ -301,10 +301,15 @@ class MUNIT_Trainer(nn.Module):
         label_predict_c_b = self.content_classifier(c_b)
         label_predict_c_b_recon = self.content_classifier(c_b_recon)
 
-        loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
-        loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
-        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
-        loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+        self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon,
+                                                                                         label_predict_c_a)
+
+        self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon,
+                                                                                         label_predict_c_b)
 
         self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
         self.accu_content_classifier_c_a_recon = self.compute_content_classifier_accuracy(label_predict_c_a_recon,
@@ -319,26 +324,10 @@ class MUNIT_Trainer(nn.Module):
             self.accu_content_classifier_c_b_recon
         ])
 
-        # print("label_a")
-        # print(label_a.size())
-        # print(label_a[0])
-        #
-        # print("label_predict_c_a sum")
-        # print(label_predict_c_a.size())
-        # print(label_predict_c_a[0].sum())
-        # exit()
-
-        # # D loss
-        # # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
-        # x_ba_dis_out = self.dis_a(x_ba.detach())
-        # x_a_dis_out = self.dis_a(x_a)
-        # self.loss_dis_a = self.compute_dis_loss(x_ba_dis_out, x_a_dis_out)
-        # # self.loss_dis_b = self.dis_b.calc_dis_loss(x_ab.detach(), x_b)
-        # x_ab_dis_out = self.dis_b(x_ab.detach())
-        # x_b_dis_out = self.dis_b(x_b)
-        # self.loss_dis_b = self.compute_dis_loss(x_ab_dis_out, x_b_dis_out)
-
-        self.loss_cla_total = loss_content_classifier_c_a + loss_content_classifier_c_a_recon + loss_content_classifier_b + loss_content_classifier_c_b_recon
+        self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
+                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
+                              self.loss_content_classifier_c_a_and_c_a_recon + \
+                              self.loss_content_classifier_c_b_and_c_b_recon
         self.loss_cla_total.backward()
         self.cla_opt.step()
 
