@@ -38,6 +38,7 @@ class ContentClassifier(nn.Module):
         cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
         cnn += [self.Flatten()]
         cnn += [nn.Linear(1*16*16, self.n_classes)]
+        cnn += [nn.Softmax()]
         cnn = nn.Sequential(*cnn)
         return cnn
 

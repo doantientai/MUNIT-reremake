@@ -178,8 +178,9 @@ def write_html(filename, iterations, image_save_iterations, image_directory, all
 
 
 def write_loss(iterations, trainer, train_writer):
-    members = [attr for attr in dir(trainer) \
-               if not callable(getattr(trainer, attr)) and not attr.startswith("__") and ('loss' in attr or 'grad' in attr or 'nwd' in attr)]
+    members = [attr for attr in dir(trainer) if
+               not callable(getattr(trainer, attr)) and not attr.startswith("__") and
+               ('loss' in attr or 'grad' in attr or 'nwd' in attr or 'accu' in attr)]
     for m in members:
         train_writer.add_scalar(m, getattr(trainer, m), iterations + 1)
 

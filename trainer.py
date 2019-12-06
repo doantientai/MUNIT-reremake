@@ -99,6 +99,8 @@ class MUNIT_Trainer(nn.Module):
 
         self.criterion_content_classifier = nn.CrossEntropyLoss()
 
+        self.batch_size = hyperparameters['batch_size']
+
 
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
@@ -281,10 +283,17 @@ class MUNIT_Trainer(nn.Module):
         loss_content_classifier_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
 
         label_predict_c_b = self.content_classifier(c_b)
-        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_a)
+        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
 
-        # print("label_predict_c_a")
+        self.accu_content_classifier = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
+
+        # print("label_a")
+        # print(label_a.size())
+        # print(label_a[0])
+        #
+        # print("label_predict_c_a sum")
         # print(label_predict_c_a.size())
+        # print(label_predict_c_a[0].sum())
         # exit()
 
 
@@ -333,6 +342,36 @@ class MUNIT_Trainer(nn.Module):
     def compute_content_classifier_loss(self, label_predict, label_true):
         loss = self.criterion_content_classifier(label_predict, label_true)
         return loss
+
+    def compute_content_classifier_accuracy(self, label_predict, label_true):
+        # print("label_true")
+        # print(label_true)
+        #
+        # print("label_predict")
+        # print(label_predict[0])
+        # print("max")
+        values, indices = label_predict.max(1)
+        # print(indices)
+
+        results = (label_true == indices)
+        # print(results)
+
+        total_correct = results.sum().cpu().numpy()
+        # print("total_correct")
+        # print(total_correct)
+
+        # total_samples = results.size()
+        # print("total_samples")
+        # print(total_samples)
+
+        accuracy = float(total_correct) / float(self.batch_size)
+        # print("accuracy")
+        # print(accuracy)
+        #
+        # exit()
+        return accuracy
+
+
 
     def compute_dis_loss(self, outs_fake, outs_real):
         # calculate the loss to train D
