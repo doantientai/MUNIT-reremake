@@ -23,7 +23,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/MUNIT_CC_4c_accu_full', help="outputs path")
-parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug-MUNIT_CC_4c_accu_full', help="outputs path")
+# parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
@@ -63,7 +64,7 @@ else:
     sys.exit("Only support MUNIT|UNIT")
 trainer.cuda()
 train_loader_a, train_loader_b, test_loader_a, test_loader_b = get_all_data_loaders(config)
-# train_display_images_a = torch.stack([train_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
+# train_display_images_a_temp = torch.stack([train_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
 # train_display_images_b = torch.stack([train_loader_b.dataset[i][0] for i in range(display_size)]).cuda()
 # test_display_images_a = torch.stack([test_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
 # test_display_images_b = torch.stack([test_loader_b.dataset[i][0] for i in range(display_size)]).cuda()
@@ -75,7 +76,7 @@ test_display_images_b = get_display_images(test_loader_b)
 
 # print(train_display_images_a.size())
 # print([train_loader_a.dataset[i][1] for i in range(display_size)])
-exit()
+# exit()
 
 # Setup logger and output folders
 model_name = os.path.splitext(os.path.basename(opts.config))[0]
