@@ -364,9 +364,6 @@ class MUNIT_Trainer(nn.Module):
 
     def compute_content_classifier_loss(self, label_predict, label_true):
         loss = self.criterion_content_classifier(label_predict, label_true)
-        # print("compute_content_classifier_loss")
-        # print(loss.size())
-        # exit()
         return loss
 
     def compute_content_classifier_two_predictions_loss(self, label_predict_1, label_predict_2):
