@@ -16,16 +16,37 @@ import os
 import sys
 import tensorboardX
 import shutil
+from random import random
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
-parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/MUNIT_CC_4c_accu_full', help="outputs path")
+# parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/MUNIT_CC_4c_accu_full', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
 
 cudnn.benchmark = True
+
+
+def get_display_images(loader):
+    # randomly take one image from each class
+    list_images = []
+    list_classes_to_take = [x for x in range(len(loader.dataset.classes))]
+    while len(list_classes_to_take) > 0:
+        i = int(random() * len(loader.dataset.targets))
+        label = loader.dataset[i][1]
+        if label in list_classes_to_take:
+            image = loader.dataset[i][0]
+            list_images.append(image)
+            list_classes_to_take.remove(label)
+            print(list_classes_to_take)
+    return torch.stack(list_images).cuda()
+    # train_display_images_a = torch.stack([loader.dataset[i][0]]).cuda()
+
+
 
 # Load experiment setting
 config = get_config(opts.config)
@@ -42,10 +63,19 @@ else:
     sys.exit("Only support MUNIT|UNIT")
 trainer.cuda()
 train_loader_a, train_loader_b, test_loader_a, test_loader_b = get_all_data_loaders(config)
-train_display_images_a = torch.stack([train_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
-train_display_images_b = torch.stack([train_loader_b.dataset[i][0] for i in range(display_size)]).cuda()
-test_display_images_a = torch.stack([test_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
-test_display_images_b = torch.stack([test_loader_b.dataset[i][0] for i in range(display_size)]).cuda()
+# train_display_images_a = torch.stack([train_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
+# train_display_images_b = torch.stack([train_loader_b.dataset[i][0] for i in range(display_size)]).cuda()
+# test_display_images_a = torch.stack([test_loader_a.dataset[i][0] for i in range(display_size)]).cuda()
+# test_display_images_b = torch.stack([test_loader_b.dataset[i][0] for i in range(display_size)]).cuda()
+
+train_display_images_a = get_display_images(train_loader_a)
+train_display_images_b = get_display_images(train_loader_b)
+test_display_images_a = get_display_images(test_loader_a)
+test_display_images_b = get_display_images(test_loader_b)
+
+# print(train_display_images_a.size())
+# print([train_loader_a.dataset[i][1] for i in range(display_size)])
+exit()
 
 # Setup logger and output folders
 model_name = os.path.splitext(os.path.basename(opts.config))[0]
