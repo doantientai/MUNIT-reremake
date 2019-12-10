@@ -177,8 +177,12 @@ class MUNIT_Trainer(nn.Module):
 
         loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
         loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
-        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
-        loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+
+        loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
+        loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon, label_predict_c_b)
+
+        # loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        # loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
 
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
                               hyperparameters['gan_w'] * self.loss_gen_adv_b + \
@@ -192,8 +196,10 @@ class MUNIT_Trainer(nn.Module):
                               self.info_cont_loss_b + \
                               loss_content_classifier_c_a + \
                               loss_content_classifier_c_a_recon + \
-                              loss_content_classifier_b + \
-                              loss_content_classifier_c_b_recon
+                              loss_content_classifier_c_a_and_c_a_recon + \
+                              loss_content_classifier_c_b_and_c_b_recon
+                              # loss_content_classifier_b + \
+                              # loss_content_classifier_c_b_recon
         # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
         # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
         # hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
@@ -305,8 +311,8 @@ class MUNIT_Trainer(nn.Module):
         self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
         self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
 
-        self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
-        self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        # self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        # self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
         self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
                                                                                          label_predict_c_b)
 
@@ -324,9 +330,9 @@ class MUNIT_Trainer(nn.Module):
         ])
 
         self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
-                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
                               self.loss_content_classifier_c_a_and_c_a_recon + \
                               self.loss_content_classifier_c_b_and_c_b_recon
+                              # self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
         self.loss_cla_total.backward()
         self.cla_opt.step()
 
