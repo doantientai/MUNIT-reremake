@@ -47,6 +47,82 @@ class ContentClassifier(nn.Module):
         return result
 
 
+class ContentDis(nn.Module):
+    # Multi-scale discriminator architecture
+    def __init__(self, input_dim, params_d):
+        super(ContentDis, self).__init__()
+        self.n_layer = params_d['n_layer']
+        self.gan_type = params_d['gan_type']
+        self.dim = params_d['dim'] * 4
+        self.norm = params_d['norm']
+        self.activ = params_d['activ']
+        self.num_scales = params_d['num_scales']
+        self.pad_type = params_d['pad_type']
+        self.input_dim = params_d['dim'] * 4
+        self.downsample = nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)
+        # self.cnns = nn.ModuleList()
+        # for _ in range(self.num_scales):
+        #     self.cnns.append(self._make_net())
+
+        ## for the size 32x32, only one scale is used
+        self.dis_root = self._make_dis_root()
+        # dim = self.dim
+        # cnn_x = []
+        # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
+        # for i in range(self.n_layer - 1):
+        #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
+        #     dim *= 2
+        # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        # self.cnn = nn.Sequential(*cnn_x)
+        self.dis_branch_D = self._make_branch_d()
+
+        # self.dis_branch_Q = self._make_branch_q()
+        # self.conv_disc = nn.Conv2d(128, 10, 1)
+        # self.conv_mu_Q = nn.Conv2d(128, 2, 1)
+        # self.conv_var_Q = nn.Conv2d(128, 2, 1)
+
+    def _make_branch_d(self):
+        dim = self.dim
+        for i in range(self.n_layer - 1):
+            dim *= 2
+        cnn = []
+        cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
+
+    # def _make_branch_q(self):
+    #     dim = self.dim
+    #     for i in range(self.n_layer - 1):
+    #         dim *= 2
+    #     cnn = []
+    #     cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
+    #     cnn += [Conv2dBlock(dim, 128, 2, 1, norm='bn', activation=self.activ, pad_type=self.pad_type)]
+    #     cnn = nn.Sequential(*cnn)
+    #     return cnn
+
+    def _make_dis_root(self):
+        dim = self.dim
+        cnn = []
+        cnn += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
+        for i in range(self.n_layer - 1):
+            cnn += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
+            dim *= 2
+        # cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
+
+    def forward(self, c):
+        outputs = []
+        output_root = self.dis_root(c)
+
+        output_d = self.dis_branch_D(output_root)
+
+        output_wrap = {
+            "output_d": output_d
+        }
+        outputs.append(output_wrap)
+        return outputs
+
 
 class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture

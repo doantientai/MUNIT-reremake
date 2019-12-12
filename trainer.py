@@ -2,7 +2,7 @@
 Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from networks import AdaINGen, MsImageDis, ContentClassifier
+from networks import AdaINGen, MsImageDis, ContentClassifier, ContentDis
 from utils import weights_init, get_model_list, vgg_preprocess, load_vgg16, get_scheduler
 from torch.autograd import Variable
 import torch
@@ -39,6 +39,10 @@ class MUNIT_Trainer(nn.Module):
         self.dis_a = MsImageDis(hyperparameters['input_dim_a'], hyperparameters['dis'])  # discriminator for domain a
         self.dis_b = MsImageDis(hyperparameters['input_dim_b'], hyperparameters['dis'])  # discriminator for domain b
 
+        # content discriminator
+        self.dis_content_a = ContentDis(hyperparameters['input_dim_a'], hyperparameters['dis'])  # discriminator for content a
+        self.dis_content_b = ContentDis(hyperparameters['input_dim_b'], hyperparameters['dis'])  # discriminator for content b
+
         self.content_classifier = ContentClassifier(hyperparameters['gen']['dim'], hyperparameters)
 
         self.instancenorm = nn.InstanceNorm2d(512, affine=False)
@@ -69,6 +73,7 @@ class MUNIT_Trainer(nn.Module):
                 dis_params.append(param)
 
         content_classifier_params = list(self.content_classifier.parameters())
+        cont_dis_params = list(self.dis_content_a.parameters()) + list(self.dis_content_b.parameters())
 
         self.dis_opt = torch.optim.Adam([p for p in dis_params if p.requires_grad],
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
@@ -76,9 +81,13 @@ class MUNIT_Trainer(nn.Module):
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
         self.cla_opt = torch.optim.Adam([p for p in content_classifier_params if p.requires_grad],
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.cont_dis_opt = torch.optim.Adam([p for p in cont_dis_params if p.requires_grad],
+                                             lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
         self.cla_scheduler = get_scheduler(self.cla_opt, hyperparameters)
+        self.cont_dis_scheduler = get_scheduler(self.cont_dis_opt, hyperparameters)
 
         # Network weight initialization
         self.apply(weights_init(hyperparameters['init']))
@@ -87,18 +96,19 @@ class MUNIT_Trainer(nn.Module):
 
         self.content_classifier.apply(weights_init('gaussian'))
 
+        self.dis_content_a.apply(weights_init('gaussian'))
+        self.dis_content_b.apply(weights_init('gaussian'))
+
         # Load VGG model if needed
-        if 'vgg_w' in hyperparameters.keys() and hyperparameters['vgg_w'] > 0:
-            self.vgg = load_vgg16(hyperparameters['vgg_model_path'] + '/models')
-            self.vgg.eval()
-            for param in self.vgg.parameters():
-                param.requires_grad = False
+        # if 'vgg_w' in hyperparameters.keys() and hyperparameters['vgg_w'] > 0:
+        #     self.vgg = load_vgg16(hyperparameters['vgg_model_path'] + '/models')
+        #     self.vgg.eval()
+        #     for param in self.vgg.parameters():
+        #         param.requires_grad = False
 
         self.gan_type = hyperparameters['dis']['gan_type']
         self.criterionQ_con = NormalNLLLoss()
-
         self.criterion_content_classifier = nn.CrossEntropyLoss()
-
         self.batch_size = hyperparameters['batch_size']
 
     def recon_criterion(self, input, target):
@@ -125,6 +135,9 @@ class MUNIT_Trainer(nn.Module):
         # encode
         c_a, s_a_prime = self.gen_a.encode(x_a)
         c_b, s_b_prime = self.gen_b.encode(x_b)
+        # print("c_a")
+        # print(c_a.size())  # if x is 3x32x32, then c will be 128x16x16
+        # exit()
         # decode (within domain)
         x_a_recon = self.gen_a.decode(c_a, s_a_prime)
         x_b_recon = self.gen_b.decode(c_b, s_b_prime)
@@ -168,8 +181,6 @@ class MUNIT_Trainer(nn.Module):
         # self.loss_ssim_a = self.compute_ssim_loss(x_a, x_ab)
         # self.loss_ssim_b = self.compute_ssim_loss(x_b, x_ba)
 
-        # total loss
-
         label_predict_c_a = self.content_classifier(c_a)
         label_predict_c_a_recon = self.content_classifier(c_a_recon)
         label_predict_c_b = self.content_classifier(c_b)
@@ -184,6 +195,18 @@ class MUNIT_Trainer(nn.Module):
         # loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         # loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
 
+        # GAN loss 2: discriminator which distinguish cont_a and cont_b
+        # c_ab_dis_out = self.dis_content_a(torch.cat((c_a, c_b), 1))  # true
+        c_ba_dis_out = self.dis_content_a(torch.cat((c_b, c_a), 1))  # false
+        # self.loss_dis_c_ab = self.compute_dis_loss(c_ab_dis_out, c_ba_dis_out)
+        self.loss_gen_adv_c_ab = self.compute_gen_adv_loss(c_ba_dis_out)
+
+        # c_ab_recon_dis_out = self.dis_content_a(torch.cat((c_a_recon.detach(), c_b_recon.detach()), 1))  # tre
+        c_ba_recon_dis_out = self.dis_content_a(torch.cat((c_b_recon.detach(), c_a_recon.detach()), 1))  # false
+        # self.loss_dis_c_ab_recon = self.compute_dis_loss(c_ab_recon_dis_out, c_ba_recon_dis_out)
+        self.loss_gen_adv_c_ab_recon = self.compute_gen_adv_loss(c_ba_recon_dis_out)
+
+        # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
                               hyperparameters['gan_w'] * self.loss_gen_adv_b + \
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_a + \
@@ -197,7 +220,12 @@ class MUNIT_Trainer(nn.Module):
                               loss_content_classifier_c_a + \
                               loss_content_classifier_c_a_recon + \
                               loss_content_classifier_c_a_and_c_a_recon + \
-                              loss_content_classifier_c_b_and_c_b_recon
+                              loss_content_classifier_c_b_and_c_b_recon + \
+                              self.loss_gen_adv_c_a + \
+                              self.loss_gen_adv_c_b + \
+                              self.loss_gen_adv_c_ab + \
+                              self.loss_gen_adv_c_ab_recon
+
                               # loss_content_classifier_b + \
                               # loss_content_classifier_c_b_recon
         # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
@@ -341,9 +369,6 @@ class MUNIT_Trainer(nn.Module):
         return sum(lst) / len(lst)
 
     def dis_update(self, x_a, x_b, hyperparameters):
-        # print('dis_update')
-        # print(x_a.is_cuda())
-        # exit()
         self.dis_opt.zero_grad()
         s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
         s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
@@ -367,6 +392,51 @@ class MUNIT_Trainer(nn.Module):
         self.loss_dis_total = hyperparameters['gan_w'] * self.loss_dis_a + hyperparameters['gan_w'] * self.loss_dis_b
         self.loss_dis_total.backward()
         self.dis_opt.step()
+
+    def dis_cont_update(self, x_a, x_b, hyperparameters):
+        self.cont_dis_opt.zero_grad()
+        # encode
+        c_a, _ = self.gen_a.encode(x_a)
+        c_b, _ = self.gen_b.encode(x_b)
+
+        s_a = Variable(torch.randn(c_a.size(0), self.style_dim, 1, 1).cuda())
+        s_b = Variable(torch.randn(c_b.size(0), self.style_dim, 1, 1).cuda())
+
+        # decode (cross domain)
+        x_ba = self.gen_a.decode(c_b, s_a)
+        x_ab = self.gen_b.decode(c_a, s_b)
+
+        # encode
+        c_a_recon, _ = self.gen_a.encode(x_ba)
+        c_b_recon, _ = self.gen_b.encode(x_ab)
+
+        # s_a = Variable(torch.randn(c_a.size(0), self.style_dim, 1, 1).cuda())
+        # s_b = Variable(torch.randn(c_b.size(0), self.style_dim, 1, 1).cuda())
+        # encode
+        # c_a, _ = self.gen_a.encode(c_a)
+        # c_b, _ = self.gen_b.encode(c_b)
+        # decode (cross domain)
+        # x_ba = self.gen_a.decode(c_b, s_a)
+        # x_ab = self.gen_b.decode(c_a, s_b)
+
+        # D loss
+        # z_zero = torch.cat((c_a, c_b), 1)
+        # print(c_a.size())
+        # print(c_b.size())
+        # print(z_zero.size())
+        # exit()
+        c_ab_dis_out = self.dis_content_a(torch.cat((c_a, c_b), 1))  # true
+        c_ba_dis_out = self.dis_content_a(torch.cat((c_b, c_a), 1))  # false
+        self.loss_dis_c_ab = self.compute_dis_loss(c_ab_dis_out, c_ba_dis_out)
+
+        c_ab_recon_dis_out = self.dis_content_a(torch.cat((c_a_recon.detach(), c_b_recon.detach()), 1))
+        c_ba_recon_dis_out = self.dis_content_a(torch.cat((c_b_recon.detach(), c_a_recon.detach()), 1))
+        self.loss_dis_c_ab_recon = self.compute_dis_loss(c_ab_recon_dis_out, c_ba_recon_dis_out)
+
+        self.loss_dis_c_total = hyperparameters['gan_w'] * self.loss_dis_c_ab + hyperparameters['gan_w'] * self.loss_dis_c_ab_recon
+        self.loss_dis_c_total.backward()
+        self.cont_dis_opt.step()
+
 
     def compute_content_classifier_loss(self, label_predict, label_true):
         loss = self.criterion_content_classifier(label_predict, label_true)
