@@ -221,8 +221,6 @@ class MUNIT_Trainer(nn.Module):
                               loss_content_classifier_c_a_recon + \
                               loss_content_classifier_c_a_and_c_a_recon + \
                               loss_content_classifier_c_b_and_c_b_recon + \
-                              self.loss_gen_adv_c_a + \
-                              self.loss_gen_adv_c_b + \
                               self.loss_gen_adv_c_ab + \
                               self.loss_gen_adv_c_ab_recon
 
