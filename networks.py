@@ -9,8 +9,6 @@ import torch.nn.functional as F
 # from torchsummary import summary
 # from torchviz import make_dot
 
-FIRST_CONV_KERNEL_SIZE = 3
-
 try:
     from itertools import izip as zip
 except ImportError: # will be 3.x series
@@ -390,7 +388,7 @@ class StyleEncoder(nn.Module):
     def __init__(self, n_downsample, input_dim, dim, style_dim, norm, activ, pad_type):
         super(StyleEncoder, self).__init__()
         self.model = []
-        self.model += [Conv2dBlock(input_dim, dim, FIRST_CONV_KERNEL_SIZE, 1, 3, norm=norm, activation=activ, pad_type=pad_type)]
+        self.model += [Conv2dBlock(input_dim, dim, 7, 1, 3, norm=norm, activation=activ, pad_type=pad_type)]
         for i in range(2):
             self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1, norm=norm, activation=activ, pad_type=pad_type)]
             dim *= 2
@@ -408,7 +406,11 @@ class ContentEncoder(nn.Module):
     def __init__(self, n_downsample, n_res, input_dim, dim, norm, activ, pad_type):
         super(ContentEncoder, self).__init__()
         self.model = []
-        self.model += [Conv2dBlock(input_dim, dim, FIRST_CONV_KERNEL_SIZE, 1, 3, norm=norm, activation=activ, pad_type=pad_type)]
+        self.model += [Conv2dBlock(input_dim, dim, kernel_size=3, stride=1, padding=1, norm=norm,
+                                   activation=activ, pad_type=pad_type)]
+        # self.model += [nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)]
+
+        # self.model += [nn.AdaptiveAvgPool2d(1)]  # global average pooling
         # downsampling blocks
         for i in range(n_downsample):
             self.model += [Conv2dBlock(dim, 2 * dim, 4, 2, 1, norm=norm, activation=activ, pad_type=pad_type)]
@@ -434,7 +436,7 @@ class Decoder(nn.Module):
                            Conv2dBlock(dim, dim // 2, 5, 1, 2, norm='ln', activation=activ, pad_type=pad_type)]
             dim //= 2
         # use reflection padding in the last conv layer
-        self.model += [Conv2dBlock(dim, output_dim, FIRST_CONV_KERNEL_SIZE, 1, 3, norm='none', activation='tanh', pad_type=pad_type)]
+        self.model += [Conv2dBlock(dim, output_dim, 7, 1, 3, norm='none', activation='tanh', pad_type=pad_type)]
         self.model = nn.Sequential(*self.model)
 
     def forward(self, x):
