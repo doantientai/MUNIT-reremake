@@ -39,7 +39,8 @@ class ContentClassifier(nn.Module):
         cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
         cnn += [self.Flatten()]
         # cnn += [nn.Linear(1*16*16, self.n_classes)]
-        cnn += [nn.Linear(1*32*32, self.n_classes)]
+        # cnn += [nn.Linear(1*32*32, self.n_classes)]
+        cnn += [nn.Linear(1*64*64, self.n_classes)]
         cnn += [nn.Softmax()]
         cnn = nn.Sequential(*cnn)
         return cnn
@@ -202,6 +203,10 @@ class MsImageDis(nn.Module):
         outputs = []
         output_root = self.dis_root(x)
         output_root = self.downsample(output_root)
+        # output_root = self.downsample(output_root)
+
+        # print(output_root.size())
+        # exit()
 
         output_d = self.dis_branch_D(output_root)
 
