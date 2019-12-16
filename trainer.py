@@ -382,6 +382,8 @@ class MUNIT_Trainer(nn.Module):
 
         # D loss
         # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
+        # print(x_ba.detach().cpu().size())
+        # exit()
         x_ba_dis_out = self.dis_a(x_ba.detach())
         x_a_dis_out = self.dis_a(x_a)
         self.loss_dis_a = self.compute_dis_loss(x_ba_dis_out, x_a_dis_out)

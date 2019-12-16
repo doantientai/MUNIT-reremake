@@ -162,7 +162,7 @@ class MsImageDis(nn.Module):
 
     def _make_branch_d(self):
         dim = self.dim
-        for i in range(self.n_layer - 1):
+        for i in range(self.n_layer):
             dim *= 2
         cnn = []
         cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
@@ -171,10 +171,10 @@ class MsImageDis(nn.Module):
 
     def _make_branch_q(self):
         dim = self.dim
-        for i in range(self.n_layer - 1):
+        for i in range(self.n_layer):
             dim *= 2
         cnn = []
-        cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
+        # cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
         cnn += [Conv2dBlock(dim, 128, 2, 1, norm='bn', activation=self.activ, pad_type=self.pad_type)]
         cnn = nn.Sequential(*cnn)
         return cnn
@@ -183,7 +183,7 @@ class MsImageDis(nn.Module):
         dim = self.dim
         cnn = []
         cnn += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
-        for i in range(self.n_layer - 1):
+        for i in range(self.n_layer):
             cnn += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
             dim *= 2
         # cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
@@ -201,11 +201,21 @@ class MsImageDis(nn.Module):
         # cnn_x = nn.Sequential(*cnn_x)
         outputs = []
         output_root = self.dis_root(x)
-        output_root = self.downsample(output_root)
+        # output_root = self.downsample(output_root)
+
+        # print(output_root.size())  # [32, 1024, 2, 2]
+        # exit()
 
         output_d = self.dis_branch_D(output_root)
 
+        # print(output_d.size())  # [32, 1, 2, 2]
+        # exit()
+
         output_q = self.dis_branch_Q(output_root)
+
+        # print(output_q.size())  # ([32, 128, 1, 1])
+        # exit()
+
         # disc_logits = self.conv_disc(output_q).squeeze()
         mu = self.conv_mu_Q(output_q).squeeze()
         var = torch.exp(self.conv_var_Q(output_q).squeeze())
