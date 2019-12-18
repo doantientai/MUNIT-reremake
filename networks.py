@@ -144,21 +144,30 @@ class MsImageDis(nn.Module):
         #     self.cnns.append(self._make_net())
 
         ## for the size 32x32, only one scale is used
-        self.dis_root = self._make_dis_root()
-        # dim = self.dim
-        # cnn_x = []
-        # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
-        # for i in range(self.n_layer - 1):
-        #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
-        #     dim *= 2
-        # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
-        # self.cnn = nn.Sequential(*cnn_x)
-        self.dis_branch_D = self._make_branch_d()
+        # self.dis_root = self._make_dis_root()
+        # # dim = self.dim
+        # # cnn_x = []
+        # # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
+        # # for i in range(self.n_layer - 1):
+        # #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
+        # #     dim *= 2
+        # # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        # # self.cnn = nn.Sequential(*cnn_x)
+        # self.dis_branch_D = self._make_branch_d()
 
-        self.dis_branch_Q = self._make_branch_q()
+        # self.dis_branch_Q = self._make_branch_q()
         # self.conv_disc = nn.Conv2d(128, 10, 1)
         self.conv_mu_Q = nn.Conv2d(128, 2, 1)
         self.conv_var_Q = nn.Conv2d(128, 2, 1)
+
+        ### bring back multi-scale
+        self.dis_roots = nn.ModuleList()
+        self.dis_branch_Ds = nn.ModuleList()
+        self.dis_branch_Qs = nn.ModuleList()
+        for _ in range(self.num_scales):
+            self.dis_roots.append(self._make_dis_root())
+            self.dis_branch_Ds.append(self._make_branch_d())
+            self.dis_branch_Qs.append(self._make_branch_q())
 
     def _make_branch_d(self):
         dim = self.dim
@@ -191,6 +200,29 @@ class MsImageDis(nn.Module):
         return cnn
 
     def forward(self, x):
+        outputs = []
+
+        for i in range(self.num_scales):
+
+            output_root = self.dis_roots[i](x)
+            output_root = self.downsample(output_root)
+
+            output_d = self.dis_branch_Ds[i](output_root)
+
+            output_q = self.dis_branch_Qs[i](output_root)
+            mu = self.conv_mu_Q(output_q).squeeze()
+            var = torch.exp(self.conv_var_Q(output_q).squeeze())
+
+            output_wrap = {
+                "output_d": output_d,
+                "mu": mu,
+                "var": var
+            }
+
+            outputs.append(output_wrap)
+        return outputs
+
+    # def forward(self, x):
         # dim = self.dim
         # cnn_x = []
         # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
@@ -199,24 +231,23 @@ class MsImageDis(nn.Module):
         #     dim *= 2
         # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
         # cnn_x = nn.Sequential(*cnn_x)
-        outputs = []
-        output_root = self.dis_root(x)
-        output_root = self.downsample(output_root)
-
-        output_d = self.dis_branch_D(output_root)
-
-        output_q = self.dis_branch_Q(output_root)
-        # disc_logits = self.conv_disc(output_q).squeeze()
-        mu = self.conv_mu_Q(output_q).squeeze()
-        var = torch.exp(self.conv_var_Q(output_q).squeeze())
-
-        output_wrap = {
-            "output_d": output_d,
-            "mu": mu,
-            "var": var
-        }
-
-        outputs.append(output_wrap)
+        # outputs = []
+        # output_root = self.dis_root(x)
+        # output_root = self.downsample(output_root)
+        #
+        # output_d = self.dis_branch_D(output_root)
+        #
+        # output_q = self.dis_branch_Q(output_root)
+        # mu = self.conv_mu_Q(output_q).squeeze()
+        # var = torch.exp(self.conv_var_Q(output_q).squeeze())
+        #
+        # output_wrap = {
+        #     "output_d": output_d,
+        #     "mu": mu,
+        #     "var": var
+        # }
+        #
+        # outputs.append(output_wrap)
 
         # summary(self.dis_root, x.cpu().size()[1:], batch_size=x.cpu().size()[0])
         # dot = make_dot(output_root, params=dict(self.dis_root.named_parameters()))
@@ -230,7 +261,7 @@ class MsImageDis(nn.Module):
         #
         # exit()
 
-        return outputs
+        # return outputs
 
     # def forward(self, x):
     #     outputs = []
