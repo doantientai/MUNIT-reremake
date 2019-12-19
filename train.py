@@ -102,7 +102,7 @@ while True:
             trainer.dis_update(images_a, images_b, config)
             trainer.gen_update([images_a, labels_a], [images_b, labels_b], config)
             trainer.cla_update([images_a, labels_a], [images_b, labels_b], config)
-            trainer.dis_cont_update(images_a, images_b, config)
+            # trainer.dis_cont_update(images_a, images_b, config)
 
             torch.cuda.synchronize()
 

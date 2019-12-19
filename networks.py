@@ -37,7 +37,8 @@ class ContentClassifier(nn.Module):
         cnn = []
         cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
         cnn += [self.Flatten()]
-        cnn += [nn.Linear(1*16*16, self.n_classes)]
+        # cnn += [nn.Linear(1*16*16, self.n_classes)]
+        cnn += [nn.Linear(1024, self.n_classes)]  #
         cnn += [nn.Softmax()]
         cnn = nn.Sequential(*cnn)
         return cnn
@@ -128,14 +129,16 @@ class MsImageDis(nn.Module):
             # print("scale", i)
 
             output_root = self.dis_roots[i](x)
-            # output_root = self.downsample(output_root)
-
-
+            output_root = self.downsample(output_root)
             output_d = self.dis_branch_Ds[i](output_root)
-
             output_q = self.dis_branch_Qs[i](output_root)
+
             mu = self.conv_mu_Q(output_q).squeeze()
             var = torch.exp(self.conv_var_Q(output_q).squeeze())
+
+            print(mu.size())
+            print(var.size())
+            # exit()
 
             output_wrap = {
                 "output_d": output_d,
