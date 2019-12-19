@@ -16,10 +16,13 @@ from torchvision import transforms
 from PIL import Image
 
 parser = argparse.ArgumentParser()
+# parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+
 # parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testA/0.jpg', help="input image path")
-parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testB/0.jpg', help="input image path")
+# parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testB/0.jpg', help="input image path")
 # parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testB/20031.jpg', help="input image path")
-# parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testA/8952.jpg', help="input image path")
+parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testA/8952.jpg', help="input image path")
 
 # parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
 # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT/MNIST2SVHN/train023_infoStyle_QaD_con_c4/output_test', type=str, help="output image path")
@@ -31,10 +34,14 @@ parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMU
 # parser.add_argument('--config', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT/MNIST2SVHN/train_w_conc/train041_infoStyle_QaD_con_c2x10/outputs/config.yaml', type=str, help="net configuration")
 # parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT/MNIST2SVHN/train_w_conc/train041_infoStyle_QaD_con_c2x10/outputs/checkpoints/gen_01000000.pt', type=str, help="checkpoint of autoencoders")
 
-parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
-parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/output_test_latent', type=str, help="output image path")
-parser.add_argument('--config', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/config.yaml', type=str, help="net configuration")
-parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/gen_00550000.pt', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/output_test_latent', type=str, help="output image path")
+# parser.add_argument('--config', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/config.yaml', type=str, help="net configuration")
+# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/gen_00550000.pt', type=str, help="checkpoint of autoencoders")
+
+parser.add_argument('--output_folder', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/output_test_latent', type=str, help="output image path")
+parser.add_argument('--config', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/config.yaml', type=str, help="net configuration")
+parser.add_argument('--checkpoint', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/gen_00350000.pt', type=str, help="checkpoint of autoencoders")
 
 # parser.add_argument('--num_style', type=int, default=8, help="number of styles to sample")
 # parser.add_argument('--num_con_c', type=int, default=2, help="number of styles to sample")
@@ -141,18 +148,18 @@ with torch.no_grad():
         con_c_2 = 0.0
 
         con_c_1 -= 2.4
-        # con_c_2 -= 2
+        # con_c_2 -= 2.4
         for j in range(11):
             # s = style[j].unsqueeze(0)
             con_c_1 += 0.4
-            # con_c_2 += 0.1
+            # con_c_2 += 0.4
 
             s = torch.cat([style_code, Variable(torch.tensor(con_c_1).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
             s = torch.cat([s, Variable(torch.tensor(con_c_2).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
             outputs = decode(content, s)
             outputs = (outputs + 1) / 2.
-            path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f.jpg'%(str(j).zfill(2), con_c_1))
-            # path = os.path.join(opts.output_folder, file_name+'_output%s_conc2_%.1f.jpg'%(str(j).zfill(2), con_c_2))
+            # path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f.jpg'%(str(j).zfill(2), con_c_1))
+            path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f_conc2_%.1f.jpg'%(str(j).zfill(2), con_c_1, con_c_2))
             vutils.save_image(outputs.data, path, padding=0, normalize=True)
 
     else:

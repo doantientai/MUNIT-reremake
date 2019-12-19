@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/MUNIT_CC_4c_accu_full', help="outputs path")
-parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug-MUNIT_CC_4c_accu_full', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/MUNIT_CC_6-2_64x64_MS', help="outputs path")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
@@ -46,7 +46,6 @@ def get_display_images(loader):
             # print(list_classes_to_take)
     return torch.stack(list_images).cuda()
     # train_display_images_a = torch.stack([loader.dataset[i][0]]).cuda()
-
 
 
 # Load experiment setting
@@ -103,6 +102,7 @@ while True:
             trainer.dis_update(images_a, images_b, config)
             trainer.gen_update([images_a, labels_a], [images_b, labels_b], config)
             trainer.cla_update([images_a, labels_a], [images_b, labels_b], config)
+            trainer.dis_cont_update(images_a, images_b, config)
 
             torch.cuda.synchronize()
 
