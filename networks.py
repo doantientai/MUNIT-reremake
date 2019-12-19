@@ -136,8 +136,8 @@ class MsImageDis(nn.Module):
             mu = self.conv_mu_Q(output_q).squeeze()
             var = torch.exp(self.conv_var_Q(output_q).squeeze())
 
-            print(mu.size())
-            print(var.size())
+            # print(mu.size())
+            # print(var.size())
             # exit()
 
             output_wrap = {
