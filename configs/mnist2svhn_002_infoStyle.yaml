@@ -45,7 +45,7 @@ dis:
   num_scales: 1               # number of scales
   pad_type: reflect           # padding type [zero/reflect]
   style_dim: 8                # length of style code
-  num_con_c: 2                # length of continuous latent code
+  num_con_c: 4                # length of continuous latent code
 
 # data options
 input_dim_a: 3                              # number of image channels [1/3]

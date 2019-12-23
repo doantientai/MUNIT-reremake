@@ -81,8 +81,9 @@ class MsImageDis(nn.Module):
 
         # self.dis_branch_Q = self._make_branch_q()
         # self.conv_disc = nn.Conv2d(128, 10, 1)
-        self.conv_mu_Q = nn.Conv2d(128, 2, 1)
-        self.conv_var_Q = nn.Conv2d(128, 2, 1)
+        self.num_con_c = params['num_con_c']
+        self.conv_mu_Q = nn.Conv2d(128, self.num_con_c, 1)
+        self.conv_var_Q = nn.Conv2d(128, self.num_con_c, 1)
 
         ### bring back multi-scale
         self.dis_roots = nn.ModuleList()

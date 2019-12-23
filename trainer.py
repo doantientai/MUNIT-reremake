@@ -23,7 +23,10 @@ class NormalNLLLoss:
     """
 
     def __call__(self, x, mu, var):
-        logli = -0.5 * (var.mul(2 * np.pi) + 1e-6).log() - (x - mu).pow(2).div(var.mul(2.0) + 1e-6)
+        A = -0.5 * (var.mul(2 * np.pi) + 1e-6).log()
+        B = (x - mu)
+        C = B.pow(2).div(var.mul(2.0) + 1e-6)
+        logli = A - C
         nll = -(logli.sum(1).mean())
 
         return nll
@@ -43,6 +46,7 @@ class MUNIT_Trainer(nn.Module):
 
         self.instancenorm = nn.InstanceNorm2d(512, affine=False)
         self.style_dim = hyperparameters['gen']['style_dim']
+        self.num_con_c = hyperparameters['dis']['num_con_c']
 
         # fix the noise used in sampling
         display_size = int(hyperparameters['display_size'])
@@ -234,7 +238,7 @@ class MUNIT_Trainer(nn.Module):
 
     def compute_info_cont_loss(self, style_code, outs_fake):
         loss = 0
-        num_cont_code = 2
+        num_cont_code = self.num_con_c
         for it, (out_fake) in enumerate(outs_fake):
             q_mu = out_fake['mu']
             q_var = out_fake['var']
@@ -242,6 +246,7 @@ class MUNIT_Trainer(nn.Module):
             # print(q_mu.size())
             # print(q_var.size())
             # print(info_noise.size())
+            # print(num_cont_code)
             # exit()
             loss += self.criterionQ_con(info_noise, q_mu, q_var) * 0.1
         return loss
