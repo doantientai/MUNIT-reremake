@@ -239,6 +239,10 @@ class MUNIT_Trainer(nn.Module):
             q_mu = out_fake['mu']
             q_var = out_fake['var']
             info_noise = style_code[:, -num_cont_code:].view(-1, num_cont_code).squeeze().squeeze()
+            # print(q_mu.size())
+            # print(q_var.size())
+            # print(info_noise.size())
+            # exit()
             loss += self.criterionQ_con(info_noise, q_mu, q_var) * 0.1
         return loss
 
@@ -350,6 +354,9 @@ class MUNIT_Trainer(nn.Module):
 
         # D loss
         # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
+        # print(x_ba.detach().size())
+        # print(x_a.size())
+        # exit()
         x_ba_dis_out = self.dis_a(x_ba.detach())
         x_a_dis_out = self.dis_a(x_a)
         self.loss_dis_a = self.compute_dis_loss(x_ba_dis_out, x_a_dis_out)

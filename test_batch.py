@@ -3,10 +3,11 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 from __future__ import print_function
-from utils import get_config, get_data_loader_folder, pytorch03_to_pytorch04, load_inception
-from trainer import MUNIT_Trainer, UNIT_Trainer
+from utils import get_config, get_data_loader_folder_for_test, pytorch03_to_pytorch04, load_inception
+# from trainer import MUNIT_Trainer, UNIT_Trainer
+from trainer import MUNIT_Trainer
 from torch import nn
-from scipy.stats import entropy
+# from scipy.stats import entropy
 import torch.nn.functional as F
 import argparse
 from torch.autograd import Variable
@@ -23,21 +24,37 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default='configs/edges2handbags_folder', help='Path to the config file.')
-parser.add_argument('--input_folder', type=str, help="input image folder")
-parser.add_argument('--output_folder', type=str, help="output image folder")
-parser.add_argument('--checkpoint', type=str, help="checkpoint of autoencoders")
-parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--config', type=str, default='configs/edges2handbags_folder', help='Path to the config file.')
+# parser.add_argument('--input_folder', type=str, help="input image folder")
+# parser.add_argument('--output_folder', type=str, help="output image folder")
+# parser.add_argument('--checkpoint', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
 parser.add_argument('--seed', type=int, default=1, help="random seed")
-parser.add_argument('--num_style',type=int, default=10, help="number of styles to sample")
+# parser.add_argument('--num_style',type=int, default=10, help="number of styles to sample")
 parser.add_argument('--synchronized', action='store_true', help="whether use synchronized style code or not")
-parser.add_argument('--output_only', action='store_true', help="whether only save the output images or also save the input images")
+# parser.add_argument('--output_only', action='store_true', help="whether only save the output images or also save the input images")
 parser.add_argument('--output_path', type=str, default='.', help="path for logs, checkpoints, and VGG model weight")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 parser.add_argument('--compute_IS', action='store_true', help="whether to compute Inception Score or not")
 parser.add_argument('--compute_CIS', action='store_true', help="whether to compute Conditional Inception Score or not")
 parser.add_argument('--inception_a', type=str, default='.', help="path to the pretrained inception network for domain A")
 parser.add_argument('--inception_b', type=str, default='.', help="path to the pretrained inception network for domain B")
+
+
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input_folder', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testA')
+# parser.add_argument('--output_folder', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/output_test_batch/a2b', type=str, help="output image path")
+
+parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+parser.add_argument('--input_folder', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn/testB')
+parser.add_argument('--output_folder', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/output_test_batch/b2a', type=str, help="output image path")
+
+parser.add_argument('--config', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/config.yaml', type=str, help="net configuration")
+parser.add_argument('--checkpoint', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/gen_00350000.pt', type=str, help="checkpoint of autoencoders")
+parser.add_argument('--num_style',type=int, default=1, help="number of styles to sample")
+parser.add_argument('--output_only', default=True, help="whether only save the output images or also save the input images")
+
+
 
 opts = parser.parse_args()
 
@@ -60,14 +77,14 @@ if opts.compute_IS or opts.compute_IS:
 
 # Setup model and data loader
 image_names = ImageFolder(opts.input_folder, transform=None, return_paths=True)
-data_loader = get_data_loader_folder(opts.input_folder, 1, False, new_size=config['new_size_a'], crop=False)
+data_loader = get_data_loader_folder_for_test(opts.input_folder, 1, False, new_size=None, crop=False)
 
 config['vgg_model_path'] = opts.output_path
 if opts.trainer == 'MUNIT':
     style_dim = config['gen']['style_dim']
     trainer = MUNIT_Trainer(config)
-elif opts.trainer == 'UNIT':
-    trainer = UNIT_Trainer(config)
+# elif opts.trainer == 'UNIT':
+#     trainer = UNIT_Trainer(config)
 else:
     sys.exit("Only support MUNIT|UNIT")
 
@@ -117,21 +134,21 @@ if opts.trainer == 'MUNIT':
             if not os.path.exists(os.path.dirname(path)):
                 os.makedirs(os.path.dirname(path))
             vutils.save_image(outputs.data, path, padding=0, normalize=True)
-        if opts.compute_CIS:
-            cur_preds = np.concatenate(cur_preds, 0)
-            py = np.sum(cur_preds, axis=0)  # prior is computed from outputs given a specific input
-            for j in range(cur_preds.shape[0]):
-                pyx = cur_preds[j, :]
-                CIS.append(entropy(pyx, py))
+        # if opts.compute_CIS:
+        #     cur_preds = np.concatenate(cur_preds, 0)
+        #     py = np.sum(cur_preds, axis=0)  # prior is computed from outputs given a specific input
+        #     for j in range(cur_preds.shape[0]):
+        #         pyx = cur_preds[j, :]
+        #         CIS.append(entropy(pyx, py))
         if not opts.output_only:
             # also save input images
             vutils.save_image(images.data, os.path.join(opts.output_folder, 'input{:03d}.jpg'.format(i)), padding=0, normalize=True)
-    if opts.compute_IS:
-        all_preds = np.concatenate(all_preds, 0)
-        py = np.sum(all_preds, axis=0)  # prior is computed from all outputs
-        for j in range(all_preds.shape[0]):
-            pyx = all_preds[j, :]
-            IS.append(entropy(pyx, py))
+    # if opts.compute_IS:
+    #     all_preds = np.concatenate(all_preds, 0)
+    #     py = np.sum(all_preds, axis=0)  # prior is computed from all outputs
+    #     for j in range(all_preds.shape[0]):
+    #         pyx = all_preds[j, :]
+    #         IS.append(entropy(pyx, py))
 
     if opts.compute_IS:
         print("Inception Score: {}".format(np.exp(np.mean(IS))))
