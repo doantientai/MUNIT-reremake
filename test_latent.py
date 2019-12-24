@@ -129,54 +129,11 @@ with torch.no_grad():
     content, _ = encode(image)
 
     if opts.trainer == 'MUNIT':
-        # style_code = Variable(torch.randn(1, style_dim - config['dis']['num_con_c'], 1, 1).cuda())
-
-        # con_c_1 = Variable(torch.randn(opts.num_style, 1, 1, 1).cuda())
-        # con_c_2 = Variable(torch.randn(1, 1, 1, 1).cuda())
-
-        # s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        # s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
-
-        # if num_con_c != 0:
-        # con_c_a = Variable(torch.rand(opts.num_style, opts.num_con_c, 1, 1) * 2 - 1).cuda()
-        #
-        # s_a_info = torch.cat((style_rand, con_c_a), dim=1)
-
-        # if opts.style != '':
-        #     _, style = style_encode(style_image)
-        # else:
-        #     style = style_rand
-
-        # # style = style_rand
-        # con_c_1 = 0.0
-        # con_c_2 = 0.0
-        #
-        # con_c_1 -= 2.4
-        # # con_c_2 -= 2.4
-        # for j in range(11):
-        #     # s = style[j].unsqueeze(0)
-        #     con_c_1 += 0.4
-        #     # con_c_2 += 0.4
-        #
-        #     s = torch.cat([style_code, Variable(torch.tensor(con_c_1).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
-        #     s = torch.cat([s, Variable(torch.tensor(con_c_2).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
-        #     outputs = decode(content, s)
-        #     outputs = (outputs + 1) / 2.
-        #     # path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f.jpg'%(str(j).zfill(2), con_c_1))
-        #     path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f_conc2_%.1f.jpg'%(str(j).zfill(2), con_c_1, con_c_2))
-        #     vutils.save_image(outputs.data, path, padding=0, normalize=True)
-
         ### test certain style code
         style_code_seed = Variable(torch.randn(1, style_dim, 1, 1).cuda())
         style_code = style_code_seed.clone()
 
         for code_position in range(style_dim):
-            # code_position = 1
-            # print(style_code.size())
-            # print(style_code[0, :, 0, 0])
-            # style_code[0, code_position, 0, 0] = 0.0
-            # print(style_code[0, :, 0, 0])
-            # exit()
             code_values = [float(x)/5.0 - 2 for x in range(0, 21, 2)]
 
             for j, code_value in enumerate(code_values):
@@ -186,9 +143,6 @@ with torch.no_grad():
                 path = os.path.join(opts.output_folder,
                                     file_name + '_out_code%d_j%s_val_%.1f.jpg' % (code_position, str(j).zfill(2), code_value))
                 vutils.save_image(outputs.data, path, padding=0, normalize=True)
-
-            # print(code_values)
-            # exit()
 
     else:
         print('Only accept MUNIT trainer')
