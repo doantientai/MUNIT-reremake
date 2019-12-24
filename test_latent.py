@@ -39,9 +39,13 @@ parser.add_argument('--input', type=str, default='/media/tai/6TB/Projects/InfoMU
 # parser.add_argument('--config', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/config.yaml', type=str, help="net configuration")
 # parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_Q_inG_noflip/gen_00550000.pt', type=str, help="checkpoint of autoencoders")
 
-parser.add_argument('--output_folder', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/output_test_latent', type=str, help="output image path")
-parser.add_argument('--config', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/config.yaml', type=str, help="net configuration")
-parser.add_argument('--checkpoint', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/gen_00350000.pt', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--output_folder', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/output_test_latent', type=str, help="output image path")
+# parser.add_argument('--config', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/config.yaml', type=str, help="net configuration")
+# parser.add_argument('--checkpoint', default='/home/tai/Desktop/MUNIT-reremake-log/tmp6/MUNIT_CC_6losses/checkpoints/gen_00350000.pt', type=str, help="checkpoint of autoencoders")
+
+parser.add_argument('--output_folder', default='/home/tai/Desktop/MUNIT-reremake-log/tmp7/MUNIT_CC_6_cameback/output_test_latent', type=str, help="output image path")
+parser.add_argument('--config', default='/home/tai/Desktop/MUNIT-reremake-log/tmp7/MUNIT_CC_6_cameback/config.yaml', type=str, help="net configuration")
+parser.add_argument('--checkpoint', default='/home/tai/Desktop/MUNIT-reremake-log/tmp7/MUNIT_CC_6_cameback/gen_00110000.pt', type=str, help="checkpoint of autoencoders")
 
 # parser.add_argument('--num_style', type=int, default=8, help="number of styles to sample")
 # parser.add_argument('--num_con_c', type=int, default=2, help="number of styles to sample")
@@ -125,7 +129,7 @@ with torch.no_grad():
     content, _ = encode(image)
 
     if opts.trainer == 'MUNIT':
-        style_code = Variable(torch.randn(1, style_dim - config['dis']['num_con_c'], 1, 1).cuda())
+        # style_code = Variable(torch.randn(1, style_dim - config['dis']['num_con_c'], 1, 1).cuda())
 
         # con_c_1 = Variable(torch.randn(opts.num_style, 1, 1, 1).cuda())
         # con_c_2 = Variable(torch.randn(1, 1, 1, 1).cuda())
@@ -143,24 +147,48 @@ with torch.no_grad():
         # else:
         #     style = style_rand
 
-        # style = style_rand
-        con_c_1 = 0.0
-        con_c_2 = 0.0
+        # # style = style_rand
+        # con_c_1 = 0.0
+        # con_c_2 = 0.0
+        #
+        # con_c_1 -= 2.4
+        # # con_c_2 -= 2.4
+        # for j in range(11):
+        #     # s = style[j].unsqueeze(0)
+        #     con_c_1 += 0.4
+        #     # con_c_2 += 0.4
+        #
+        #     s = torch.cat([style_code, Variable(torch.tensor(con_c_1).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
+        #     s = torch.cat([s, Variable(torch.tensor(con_c_2).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
+        #     outputs = decode(content, s)
+        #     outputs = (outputs + 1) / 2.
+        #     # path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f.jpg'%(str(j).zfill(2), con_c_1))
+        #     path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f_conc2_%.1f.jpg'%(str(j).zfill(2), con_c_1, con_c_2))
+        #     vutils.save_image(outputs.data, path, padding=0, normalize=True)
 
-        con_c_1 -= 2.4
-        # con_c_2 -= 2.4
-        for j in range(11):
-            # s = style[j].unsqueeze(0)
-            con_c_1 += 0.4
-            # con_c_2 += 0.4
+        ### test certain style code
+        style_code_seed = Variable(torch.randn(1, style_dim, 1, 1).cuda())
+        style_code = style_code_seed.clone()
 
-            s = torch.cat([style_code, Variable(torch.tensor(con_c_1).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
-            s = torch.cat([s, Variable(torch.tensor(con_c_2).unsqueeze(0).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1).cuda())], dim=1)
-            outputs = decode(content, s)
-            outputs = (outputs + 1) / 2.
-            # path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f.jpg'%(str(j).zfill(2), con_c_1))
-            path = os.path.join(opts.output_folder, file_name+'_output%s_conc1_%.1f_conc2_%.1f.jpg'%(str(j).zfill(2), con_c_1, con_c_2))
-            vutils.save_image(outputs.data, path, padding=0, normalize=True)
+        for code_position in range(style_dim):
+            # code_position = 1
+            # print(style_code.size())
+            # print(style_code[0, :, 0, 0])
+            # style_code[0, code_position, 0, 0] = 0.0
+            # print(style_code[0, :, 0, 0])
+            # exit()
+            code_values = [float(x)/5.0 - 2 for x in range(0, 21, 2)]
+
+            for j, code_value in enumerate(code_values):
+                style_code[0, code_position, 0, 0] = code_value
+                outputs = decode(content, style_code)
+                outputs = (outputs + 1) / 2.
+                path = os.path.join(opts.output_folder,
+                                    file_name + '_out_code%d_j%s_val_%.1f.jpg' % (code_position, str(j).zfill(2), code_value))
+                vutils.save_image(outputs.data, path, padding=0, normalize=True)
+
+            # print(code_values)
+            # exit()
 
     else:
         print('Only accept MUNIT trainer')
