@@ -55,6 +55,8 @@ def get_all_data_loaders(conf):
     if True:
         train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
                                               new_size_a, height, width, num_workers, True, flip_lf=False)
+        train_loader_a_limited = get_data_loader_folder(os.path.join(conf['data_root'], conf['folder_limited']), batch_size, True,
+                                                new_size_a, height, width, num_workers, True, flip_lf=False)
         test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size, False,
                                              new_size_a, new_size_a, new_size_a, num_workers, True)
         train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'trainB'), batch_size, True,
@@ -70,7 +72,8 @@ def get_all_data_loaders(conf):
     #                                             new_size_b, height, width, num_workers, True)
     #     test_loader_b = get_data_loader_list(conf['data_folder_test_b'], conf['data_list_test_b'], batch_size, False,
     #                                             new_size_b, new_size_b, new_size_b, num_workers, True)
-    return train_loader_a, train_loader_b, test_loader_a, test_loader_b
+    # return train_loader_a, train_loader_b, test_loader_a, test_loader_b
+    return train_loader_a, train_loader_a_limited, train_loader_b, test_loader_a, test_loader_b
 
 
 def get_data_loader_list(root, file_list, batch_size, train, new_size=None,
