@@ -5,6 +5,7 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 import torch.utils.data as data
 from torchvision.datasets.folder import DatasetFolder
 import os.path
+from random import shuffle
 
 
 def default_loader(path):
@@ -158,9 +159,15 @@ class ImageFolderTorchVision(DatasetFolder):
     """
 
     def __init__(self, root, transform=None, target_transform=None,
-                 loader=default_loader):
+                 loader=default_loader, num_samples=None):
         super(ImageFolderTorchVision, self).__init__(root, loader, IMG_EXTENSIONS,
                                                      transform=transform,
                                                      target_transform=target_transform)
-        self.targets = [x[1] for x in self.samples]
-        self.imgs = self.samples
+        if num_samples is None:
+            self.targets = [x[1] for x in self.samples]
+            self.imgs = self.samples
+        else:
+            shuffle(self.samples)
+            self.samples = self.samples[:num_samples]
+            self.targets = [x[1] for x in self.samples[:num_samples]]
+            self.imgs = self.samples[:num_samples]

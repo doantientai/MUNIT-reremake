@@ -7,6 +7,7 @@ image_display_iter: 100       # How often do you want to display output images d
 display_size: 10               # How many images do you want to display each time
 snapshot_save_iter: 10000     # How often do you want to save trained models
 log_iter: 100                   # How often do you want to log the training stats
+limited_labels_a : 6000   # number of sample MNIST having labels
 
 # optimization options
 max_iter: 1000000             # maximum number of training iterations
@@ -45,7 +46,7 @@ dis:
   num_scales: 1               # number of scales
   pad_type: reflect           # padding type [zero/reflect]
   style_dim: 8                # length of style code
-  num_con_c: 4                # length of continuous latent code
+  num_con_c: 2                # length of continuous latent code
 
 # data options
 input_dim_a: 3                              # number of image channels [1/3]
