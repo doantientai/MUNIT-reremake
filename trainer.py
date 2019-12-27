@@ -119,9 +119,10 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_ab, x_ba
 
-    def gen_update(self, sample_a, sample_b, hyperparameters):
-        x_a, label_a = sample_a
+    def gen_update(self, sample_a, sample_b, hyperparameters, sample_a_limited):
+        x_a, _ = sample_a
         x_b, label_b = sample_b
+        x_a_limited, label_a_limited = sample_a_limited
 
         self.gen_opt.zero_grad()
         s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
@@ -139,8 +140,8 @@ class MUNIT_Trainer(nn.Module):
         c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
         c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
         # decode again (if needed)
-        x_aba = self.gen_a.decode(c_a_recon, s_a_prime) if hyperparameters['recon_x_cyc_w'] > 0 else None
-        x_bab = self.gen_b.decode(c_b_recon, s_b_prime) if hyperparameters['recon_x_cyc_w'] > 0 else None
+        # x_aba = self.gen_a.decode(c_a_recon, s_a_prime) if hyperparameters['recon_x_cyc_w'] > 0 else None
+        # x_bab = self.gen_b.decode(c_b_recon, s_b_prime) if hyperparameters['recon_x_cyc_w'] > 0 else None
 
         # reconstruction loss
         self.loss_gen_recon_x_a = self.recon_criterion(x_a_recon, x_a)
@@ -163,17 +164,29 @@ class MUNIT_Trainer(nn.Module):
         self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
         self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
 
-        # total loss
-        label_predict_c_a = self.content_classifier(c_a)
-        label_predict_c_a_recon = self.content_classifier(c_a_recon)
+        # label_predict_c_a = self.content_classifier(c_a)
+        # label_predict_c_a_recon = self.content_classifier(c_a_recon)
         label_predict_c_b = self.content_classifier(c_b)
         label_predict_c_b_recon = self.content_classifier(c_b_recon)
 
-        loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
-        loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+        # loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+        # loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+
+        ### compute loss of classifier c_a based on limited samples
+        c_a_limited, _ = self.gen_a.encode(x_a_limited)
+        label_predict_c_a_limited = self.content_classifier(c_a_limited)
+
+        x_ab_limited = self.gen_b.decode(c_a_limited, s_b)
+        c_a_recon_limited, _ = self.gen_b.encode(x_ab_limited)
+        label_predict_c_a_recon_limited = self.content_classifier(c_a_recon_limited)
+
+        loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a_limited, label_a_limited)
+        loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon_limited, label_a_limited)
+
         loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
 
+        # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
                               hyperparameters['gan_w'] * self.loss_gen_adv_b + \
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_a + \
