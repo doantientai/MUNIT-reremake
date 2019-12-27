@@ -89,7 +89,7 @@ iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opt
 while True:
     for it, (samples_a, samples_b, samples_a_limited) in enumerate(zip(train_loader_a, train_loader_b, train_loader_a_limited)):
         images_a, labels_a = samples_a
-        images_a_limited, labels_a_limited = samples_a
+        images_a_limited, labels_a_limited = samples_a_limited
         images_b, labels_b = samples_b
 
         # print(labels_a)

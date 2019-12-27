@@ -39,6 +39,7 @@ import time
 # get_scheduler
 # weights_init
 
+
 def get_all_data_loaders(conf):
     batch_size = conf['batch_size']
     num_workers = conf['num_workers']
