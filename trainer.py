@@ -104,6 +104,7 @@ class MUNIT_Trainer(nn.Module):
         self.criterion_content_classifier = nn.CrossEntropyLoss()
 
         self.batch_size = hyperparameters['batch_size']
+        self.batch_size_val = hyperparameters['batch_size_val']
 
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
@@ -437,7 +438,7 @@ class MUNIT_Trainer(nn.Module):
         # print("total_samples")
         # print(total_samples)
 
-        accuracy = float(total_correct) / float(self.batch_size)
+        accuracy = float(total_correct) / float(self.batch_size_val)
         # print("accuracy")
         # print(accuracy)
         #

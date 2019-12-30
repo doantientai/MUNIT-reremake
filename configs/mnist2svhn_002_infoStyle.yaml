@@ -12,6 +12,7 @@ limited_labels_a : 6000   # number of sample MNIST having labels
 # optimization options
 max_iter: 1000000             # maximum number of training iterations
 batch_size: 128                 # batch size
+batch_size_val: 256
 weight_decay: 0.0001          # weight decay
 beta1: 0.5                    # Adam parameter
 beta2: 0.999                  # Adam parameter
