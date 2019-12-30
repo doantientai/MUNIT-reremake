@@ -25,7 +25,7 @@ parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoSt
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
 parser.add_argument('--output_path', type=str,
-                    default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_128',
+                    default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_LL1k',
                     help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
