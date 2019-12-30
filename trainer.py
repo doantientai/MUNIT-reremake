@@ -248,7 +248,7 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_a, x_a_recon, x_ab1, x_ab2, x_b, x_b_recon, x_ba1, x_ba2
 
-    def cla_update(self, sample_a, sample_b, hyperparameters):
+    def cla_update(self, sample_a, sample_b):
         x_a, label_a = sample_a
         x_b, label_b = sample_b
         # print('cla_update')
@@ -287,6 +287,65 @@ class MUNIT_Trainer(nn.Module):
         self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
                                                                                          label_predict_c_b)
 
+        # self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
+        # self.accu_content_classifier_c_a_recon = self.compute_content_classifier_accuracy(label_predict_c_a_recon,
+        #                                                                                   label_a)
+        # self.accu_content_classifier_c_b = self.compute_content_classifier_accuracy(label_predict_c_b, label_b)
+        # self.accu_content_classifier_c_b_recon = self.compute_content_classifier_accuracy(label_predict_c_b_recon,
+        #                                                                                   label_b)
+        # self.accu_CC_all = self.mean_list([
+        #     self.accu_content_classifier_c_a,
+        #     self.accu_content_classifier_c_a_recon,
+        #     self.accu_content_classifier_c_b,
+        #     self.accu_content_classifier_c_b_recon
+        # ])
+
+        self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
+                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
+                              self.loss_content_classifier_c_a_and_c_a_recon + \
+                              self.loss_content_classifier_c_b_and_c_b_recon
+        self.loss_cla_total.backward()
+        self.cla_opt.step()
+
+    def cla_inference(self, sample_a, sample_b):
+        x_a, label_a = sample_a
+        x_b, label_b = sample_b
+        # print('cla_update')
+        # print(x_a.device())
+        # exit()
+        # self.cla_opt.zero_grad()
+        s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+        # encode
+        c_a, s_a_prime = self.gen_a.encode(x_a)
+        c_b, s_b_prime = self.gen_b.encode(x_b)
+        # print("c_a")
+        # print(c_a.size())
+        # exit()
+        # decode (within domain)
+        # x_a_recon = self.gen_a.decode(c_a, s_a_prime)
+        # x_b_recon = self.gen_b.decode(c_b, s_b_prime)
+        # decode (cross domain)
+        x_ba = self.gen_a.decode(c_b, s_a)
+        x_ab = self.gen_b.decode(c_a, s_b)
+        # encode again
+        c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
+        c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
+
+        label_predict_c_a = self.content_classifier(c_a)
+        label_predict_c_a_recon = self.content_classifier(c_a_recon)
+        label_predict_c_b = self.content_classifier(c_b)
+        label_predict_c_b_recon = self.content_classifier(c_b_recon)
+
+        # self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+        # self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+        # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
+        #
+        # self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        # self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        # self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
+        #                                                                                  label_predict_c_b)
+
         self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
         self.accu_content_classifier_c_a_recon = self.compute_content_classifier_accuracy(label_predict_c_a_recon,
                                                                                           label_a)
@@ -300,12 +359,14 @@ class MUNIT_Trainer(nn.Module):
             self.accu_content_classifier_c_b_recon
         ])
 
-        self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
-                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
-                              self.loss_content_classifier_c_a_and_c_a_recon + \
-                              self.loss_content_classifier_c_b_and_c_b_recon
-        self.loss_cla_total.backward()
-        self.cla_opt.step()
+        # self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
+        #                       self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
+        #                       self.loss_content_classifier_c_a_and_c_a_recon + \
+        #                       self.loss_content_classifier_c_b_and_c_b_recon
+        # self.loss_cla_total.backward()
+        # self.cla_opt.step()
+
+
 
     @staticmethod
     def mean_list(lst):
