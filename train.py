@@ -2,15 +2,16 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from utils import get_all_data_loaders, prepare_sub_folder, write_html, write_loss, get_config, write_2images, Timer
+from utils import get_all_data_loaders, prepare_sub_folder, write_loss, get_config, write_2images, Timer
 import argparse
 from torch.autograd import Variable
 from trainer import MUNIT_Trainer
 import torch.backends.cudnn as cudnn
 import torch
+
 try:
     from itertools import izip as zip
-except ImportError: # will be 3.x series
+except ImportError:  # will be 3.x series
     pass
 import os
 import sys
@@ -18,12 +19,14 @@ import tensorboardX
 import shutil
 from random import random
 
-
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
+parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml',
+                    help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6_LL1k', help="outputs path")
+parser.add_argument('--output_path', type=str,
+                    default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_128',
+                    help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
@@ -45,7 +48,6 @@ def get_display_images(loader):
             # print(list_classes_to_take)
     return torch.stack(list_images).cuda()
     # train_display_images_a = torch.stack([loader.dataset[i][0]]).cuda()
-
 
 
 # Load experiment setting
@@ -82,25 +84,28 @@ model_name = os.path.splitext(os.path.basename(opts.config))[0]
 train_writer = tensorboardX.SummaryWriter(os.path.join(opts.output_path + "/logs", model_name))
 output_directory = os.path.join(opts.output_path + "/outputs", model_name)
 checkpoint_directory, image_directory = prepare_sub_folder(output_directory)
-shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml')) # copy config file to output folder
+shutil.copy(opts.config, os.path.join(output_directory, 'config.yaml'))  # copy config file to output folder
 
 # Start training
 iterations = trainer.resume(checkpoint_directory, hyperparameters=config) if opts.resume else 0
 while True:
-    for it, (samples_a, samples_b, samples_a_limited) in enumerate(zip(train_loader_a, train_loader_b, train_loader_a_limited)):
-        images_a, labels_a = samples_a
+    for it, (samples_a, samples_b, samples_a_limited) in enumerate(
+            zip(train_loader_a, train_loader_b, train_loader_a_limited)):
+        # images_a, labels_a = samples_a
+        images_a, _ = samples_a
         images_a_limited, labels_a_limited = samples_a_limited
         images_b, labels_b = samples_b
 
         trainer.update_learning_rate()
         images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
-        labels_a, labels_b = labels_a.cuda().detach(), labels_b.cuda().detach()
+        # labels_a, labels_b = labels_a.cuda().detach(), labels_b.cuda().detach()
+        labels_b = labels_b.cuda().detach()
         images_a_limited, labels_a_limited = images_a_limited.cuda().detach(), labels_a_limited.cuda().detach()
 
         with Timer("Elapsed time in update: %f"):
             # Main training code
             trainer.dis_update(images_a, images_b, config)
-            trainer.gen_update([images_a, labels_a], [images_b, labels_b], config, [images_a_limited, labels_a_limited])
+            trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
             trainer.cla_update([images_a_limited, labels_a_limited], [images_b, labels_b], config)
 
             torch.cuda.synchronize()
@@ -132,4 +137,3 @@ while True:
         iterations += 1
         if iterations >= max_iter:
             sys.exit('Finish training')
-

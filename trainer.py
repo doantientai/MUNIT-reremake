@@ -119,8 +119,7 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_ab, x_ba
 
-    def gen_update(self, sample_a, sample_b, hyperparameters, sample_a_limited):
-        x_a, _ = sample_a
+    def gen_update(self, x_a, sample_b, hyperparameters, sample_a_limited):
         x_b, label_b = sample_b
         x_a_limited, label_a_limited = sample_a_limited
 

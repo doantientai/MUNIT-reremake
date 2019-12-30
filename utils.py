@@ -175,28 +175,28 @@ def write_one_row_html(html_file, iterations, img_filename, all_size):
     return
 
 
-def write_html(filename, iterations, image_save_iterations, image_directory, all_size=1536):
-    html_file = open(filename, "w")
-    html_file.write('''
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Experiment name = %s</title>
-      <meta http-equiv="refresh" content="30">
-    </head>
-    <body>
-    ''' % os.path.basename(filename))
-    html_file.write("<h3>current</h3>")
-    write_one_row_html(html_file, iterations, '%s/gen_a2b_train_current.jpg' % (image_directory), all_size)
-    write_one_row_html(html_file, iterations, '%s/gen_b2a_train_current.jpg' % (image_directory), all_size)
-    for j in range(iterations, image_save_iterations-1, -1):
-        if j % image_save_iterations == 0:
-            write_one_row_html(html_file, j, '%s/gen_a2b_test_%08d.jpg' % (image_directory, j), all_size)
-            write_one_row_html(html_file, j, '%s/gen_b2a_test_%08d.jpg' % (image_directory, j), all_size)
-            write_one_row_html(html_file, j, '%s/gen_a2b_train_%08d.jpg' % (image_directory, j), all_size)
-            write_one_row_html(html_file, j, '%s/gen_b2a_train_%08d.jpg' % (image_directory, j), all_size)
-    html_file.write("</body></html>")
-    html_file.close()
+# def write_html(filename, iterations, image_save_iterations, image_directory, all_size=1536):
+#     html_file = open(filename, "w")
+#     html_file.write('''
+#     <!DOCTYPE html>
+#     <html>
+#     <head>
+#       <title>Experiment name = %s</title>
+#       <meta http-equiv="refresh" content="30">
+#     </head>
+#     <body>
+#     ''' % os.path.basename(filename))
+#     html_file.write("<h3>current</h3>")
+#     write_one_row_html(html_file, iterations, '%s/gen_a2b_train_current.jpg' % (image_directory), all_size)
+#     write_one_row_html(html_file, iterations, '%s/gen_b2a_train_current.jpg' % (image_directory), all_size)
+#     for j in range(iterations, image_save_iterations-1, -1):
+#         if j % image_save_iterations == 0:
+#             write_one_row_html(html_file, j, '%s/gen_a2b_test_%08d.jpg' % (image_directory, j), all_size)
+#             write_one_row_html(html_file, j, '%s/gen_b2a_test_%08d.jpg' % (image_directory, j), all_size)
+#             write_one_row_html(html_file, j, '%s/gen_a2b_train_%08d.jpg' % (image_directory, j), all_size)
+#             write_one_row_html(html_file, j, '%s/gen_b2a_train_%08d.jpg' % (image_directory, j), all_size)
+#     html_file.write("</body></html>")
+#     html_file.close()
 
 
 def write_loss(iterations, trainer, train_writer):
@@ -265,16 +265,16 @@ def load_vgg16(model_dir):
     vgg.load_state_dict(torch.load(os.path.join(model_dir, 'vgg16.weight')))
     return vgg
 
-def load_inception(model_path):
-    state_dict = torch.load(model_path)
-    model = inception_v3(pretrained=False, transform_input=True)
-    model.aux_logits = False
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, state_dict['fc.weight'].size(0))
-    model.load_state_dict(state_dict)
-    for param in model.parameters():
-        param.requires_grad = False
-    return model
+# def load_inception(model_path):
+#     state_dict = torch.load(model_path)
+#     model = inception_v3(pretrained=False, transform_input=True)
+#     model.aux_logits = False
+#     num_ftrs = model.fc.in_features
+#     model.fc = nn.Linear(num_ftrs, state_dict['fc.weight'].size(0))
+#     model.load_state_dict(state_dict)
+#     for param in model.parameters():
+#         param.requires_grad = False
+#     return model
 
 def vgg_preprocess(batch):
     tensortype = type(batch.data)
