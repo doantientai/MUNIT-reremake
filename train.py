@@ -124,11 +124,8 @@ while True:
             write_2images(train_image_outputs, display_size, image_directory, 'train_%08d' % (iterations + 1))
             # HTML
             # write_html(output_directory + "/index.html", iterations + 1, config['image_save_iter'], 'images')
-            for it_inf, (samples_a_test, samples_b_test) in enumerate(zip(test_loader_a, test_loader_b)):
-                images_a_test, labels_a_test = samples_a_test[0].cuda().detach(), samples_a_test[1].cuda().detach()
-                images_b_test, labels_b_test = samples_b_test[0].cuda().detach(), samples_b_test[1].cuda().detach()
-                trainer.cla_inference([images_a_test, labels_a_test], [images_b_test, labels_b_test])
-                break
+            trainer.cla_inference(test_loader_a, test_loader_b)
+
 
         if (iterations + 1) % config['image_display_iter'] == 0:
             with torch.no_grad():

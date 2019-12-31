@@ -106,6 +106,12 @@ class MUNIT_Trainer(nn.Module):
         self.batch_size = hyperparameters['batch_size']
         self.batch_size_val = hyperparameters['batch_size_val']
 
+        self.accu_content_classifier_c_a = 0
+        self.accu_content_classifier_c_a_recon = 0
+        self.accu_content_classifier_c_b = 0
+        self.accu_content_classifier_c_b_recon = 0
+        self.accu_CC_all = 0
+
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
 
@@ -308,51 +314,58 @@ class MUNIT_Trainer(nn.Module):
         self.loss_cla_total.backward()
         self.cla_opt.step()
 
-    def cla_inference(self, sample_a, sample_b):
-        x_a, label_a = sample_a
-        x_b, label_b = sample_b
-        # print('cla_update')
-        # print(x_a.device())
-        # exit()
-        # self.cla_opt.zero_grad()
-        s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
-        # encode
-        c_a, s_a_prime = self.gen_a.encode(x_a)
-        c_b, s_b_prime = self.gen_b.encode(x_b)
-        # print("c_a")
-        # print(c_a.size())
-        # exit()
-        # decode (within domain)
-        # x_a_recon = self.gen_a.decode(c_a, s_a_prime)
-        # x_b_recon = self.gen_b.decode(c_b, s_b_prime)
-        # decode (cross domain)
-        x_ba = self.gen_a.decode(c_b, s_a)
-        x_ab = self.gen_b.decode(c_a, s_b)
-        # encode again
-        c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
-        c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
+    def cla_inference(self, test_loader_a, test_loader_b):
+        accu_content_classifier_c_a = []
+        accu_content_classifier_c_a_recon = []
+        accu_content_classifier_c_b = []
+        accu_content_classifier_c_b_recon = []
+        for it_inf, (samples_a_test, samples_b_test) in enumerate(zip(test_loader_a, test_loader_b)):
+            x_a, label_a = samples_a_test[0].cuda().detach(), samples_a_test[1].cuda().detach()
+            x_b, label_b = samples_b_test[0].cuda().detach(), samples_b_test[1].cuda().detach()
 
-        label_predict_c_a = self.content_classifier(c_a)
-        label_predict_c_a_recon = self.content_classifier(c_a_recon)
-        label_predict_c_b = self.content_classifier(c_b)
-        label_predict_c_b_recon = self.content_classifier(c_b_recon)
+            s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+            s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
 
-        # self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
-        # self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
-        # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
-        #
-        # self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
-        # self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
-        # self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
-        #                                                                                  label_predict_c_b)
+            # encode
+            c_a, s_a_prime = self.gen_a.encode(x_a)
+            c_b, s_b_prime = self.gen_b.encode(x_b)
+            # print("c_a")
+            # print(c_a.size())
+            # exit()
+            # decode (within domain)
+            # x_a_recon = self.gen_a.decode(c_a, s_a_prime)
+            # x_b_recon = self.gen_b.decode(c_b, s_b_prime)
+            # decode (cross domain)
+            x_ba = self.gen_a.decode(c_b, s_a)
+            x_ab = self.gen_b.decode(c_a, s_b)
+            # encode again
+            c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
+            c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
 
-        self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
-        self.accu_content_classifier_c_a_recon = self.compute_content_classifier_accuracy(label_predict_c_a_recon,
-                                                                                          label_a)
-        self.accu_content_classifier_c_b = self.compute_content_classifier_accuracy(label_predict_c_b, label_b)
-        self.accu_content_classifier_c_b_recon = self.compute_content_classifier_accuracy(label_predict_c_b_recon,
-                                                                                          label_b)
+            label_predict_c_a = self.content_classifier(c_a)
+            label_predict_c_a_recon = self.content_classifier(c_a_recon)
+            label_predict_c_b = self.content_classifier(c_b)
+            label_predict_c_b_recon = self.content_classifier(c_b_recon)
+
+            # self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+            # self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+            # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
+            #
+            # self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+            # self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+            # self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
+            #                                                                                  label_predict_c_b)
+
+            accu_content_classifier_c_a.append(self.compute_content_classifier_accuracy(label_predict_c_a, label_a))
+            accu_content_classifier_c_a_recon.append(self.compute_content_classifier_accuracy(label_predict_c_a_recon, label_a))
+            accu_content_classifier_c_b.append(self.compute_content_classifier_accuracy(label_predict_c_b, label_b))
+            accu_content_classifier_c_b_recon.append(self.compute_content_classifier_accuracy(label_predict_c_b_recon, label_b))
+
+        self.accu_content_classifier_c_a = self.mean_list(accu_content_classifier_c_a)
+        self.accu_content_classifier_c_a_recon = self.mean_list(accu_content_classifier_c_a_recon)
+        self.accu_content_classifier_c_b = self.mean_list(accu_content_classifier_c_b)
+        self.accu_content_classifier_c_b_recon = self.mean_list(accu_content_classifier_c_b_recon)
+
         self.accu_CC_all = self.mean_list([
             self.accu_content_classifier_c_a,
             self.accu_content_classifier_c_a_recon,
