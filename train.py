@@ -103,7 +103,7 @@ while True:
 
         with Timer("Elapsed time in update: %f"):
             # Main training code
-            time_start_iter = time()
+            # time_start_iter = time()
 
             trainer.dis_update(images_a, images_b, config)
             # time_dis = time()
