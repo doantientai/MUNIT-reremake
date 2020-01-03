@@ -106,16 +106,16 @@ while True:
             time_start_iter = time()
 
             trainer.dis_update(images_a, images_b, config)
-            time_dis = time()
-            print(f'Dis: {time_dis - time_start_iter}', end=" ")
+            # time_dis = time()
+            # print(f'Dis: {time_dis - time_start_iter}', end=" ")
 
             trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
-            time_gen = time()
-            print(f'Gen: {time_gen - time_dis}', end=" ")
+            # time_gen = time()
+            # print(f'Gen: {time_gen - time_dis}', end=" ")
 
             trainer.cla_update([images_a_limited, labels_a_limited], [images_b, labels_b])
-            time_con_cla = time()
-            print(f'Cla: {time_con_cla - time_gen}')
+            # time_con_cla = time()
+            # print(f'Cla: {time_con_cla - time_gen}')
 
             torch.cuda.synchronize()
 
