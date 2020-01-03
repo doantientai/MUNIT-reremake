@@ -67,7 +67,7 @@ class MUNIT_Trainer(nn.Module):
         # gen_params = list()
         for name, param in dis_named_params:
             if "_Q" in name:
-                print('%s --> gen_params' % name)
+                # print('%s --> gen_params' % name)
                 gen_params.append(param)
             else:
                 dis_params.append(param)
@@ -103,14 +103,14 @@ class MUNIT_Trainer(nn.Module):
 
         self.criterion_content_classifier = nn.CrossEntropyLoss()
 
-        self.batch_size = hyperparameters['batch_size']
+        # self.batch_size = hyperparameters['batch_size']
         self.batch_size_val = hyperparameters['batch_size_val']
 
-        self.accu_content_classifier_c_a = 0
-        self.accu_content_classifier_c_a_recon = 0
-        self.accu_content_classifier_c_b = 0
-        self.accu_content_classifier_c_b_recon = 0
-        self.accu_CC_all = 0
+        # self.accu_content_classifier_c_a = 0
+        # self.accu_content_classifier_c_a_recon = 0
+        # self.accu_content_classifier_c_b = 0
+        # self.accu_content_classifier_c_b_recon = 0
+        # self.accu_CC_all = 0
 
     def recon_criterion(self, input, target):
         return torch.mean(torch.abs(input - target))
@@ -202,7 +202,7 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_b + \
                               hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
                               self.info_cont_loss_a + \
-                              self.info_cont_loss_b + \
+                              self.info_cont_loss_b +\
                               loss_content_classifier_c_a + \
                               loss_content_classifier_c_a_recon + \
                               loss_content_classifier_b + \
@@ -380,8 +380,6 @@ class MUNIT_Trainer(nn.Module):
         # self.loss_cla_total.backward()
         # self.cla_opt.step()
 
-
-
     @staticmethod
     def mean_list(lst):
         return sum(lst) / len(lst)
@@ -510,13 +508,19 @@ class MUNIT_Trainer(nn.Module):
         state_dict = torch.load(last_model_name)
         self.dis_a.load_state_dict(state_dict['a'])
         self.dis_b.load_state_dict(state_dict['b'])
+        # Load content classifier
+        last_model_name = get_model_list(checkpoint_dir, "con_cla")
+        state_dict = torch.load(last_model_name)
+        self.content_classifier.load_state_dict(state_dict['con_cla'])
         # Load optimizers
         state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
         self.dis_opt.load_state_dict(state_dict['dis'])
         self.gen_opt.load_state_dict(state_dict['gen'])
+        self.cla_opt.load_state_dict(state_dict['con_cla'])
         # Reinitilize schedulers
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
+        self.cla_scheduler = get_scheduler(self.cla_opt, hyperparameters, iterations)
         print('Resume from iteration %d' % iterations)
         return iterations
 
@@ -524,7 +528,12 @@ class MUNIT_Trainer(nn.Module):
         # Save generators, discriminators, and optimizers
         gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
         dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
+        con_cla_name = os.path.join(snapshot_dir, 'con_cla_%08d.pt' % (iterations + 1))
         opt_name = os.path.join(snapshot_dir, 'optimizer.pt')
+
         torch.save({'a': self.gen_a.state_dict(), 'b': self.gen_b.state_dict()}, gen_name)
         torch.save({'a': self.dis_a.state_dict(), 'b': self.dis_b.state_dict()}, dis_name)
-        torch.save({'gen': self.gen_opt.state_dict(), 'dis': self.dis_opt.state_dict()}, opt_name)
+        torch.save({'con_cla': self.content_classifier.state_dict()}, con_cla_name)
+        torch.save({'gen': self.gen_opt.state_dict(),
+                    'dis': self.dis_opt.state_dict(),
+                    'con_cla': self.cla_opt.state_dict()}, opt_name)

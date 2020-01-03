@@ -18,16 +18,15 @@ import sys
 import tensorboardX
 import shutil
 from random import random
+from time import time
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml',
-                    help='Path to the config file.')
+parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
-parser.add_argument('--output_path', type=str,
-                    default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_LL1k',
-                    help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_LL1k_debug_save_model', help="outputs path")
 parser.add_argument("--resume", action="store_true")
+# parser.add_argument("--resume", default=True)
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
 
@@ -104,9 +103,19 @@ while True:
 
         with Timer("Elapsed time in update: %f"):
             # Main training code
+            time_start_iter = time()
+
             trainer.dis_update(images_a, images_b, config)
+            time_dis = time()
+            print(f'Dis: {time_dis - time_start_iter}', end=" ")
+
             trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
+            time_gen = time()
+            print(f'Gen: {time_gen - time_dis}', end=" ")
+
             trainer.cla_update([images_a_limited, labels_a_limited], [images_b, labels_b])
+            time_con_cla = time()
+            print(f'Cla: {time_con_cla - time_gen}')
 
             torch.cuda.synchronize()
 
@@ -125,7 +134,6 @@ while True:
             # HTML
             # write_html(output_directory + "/index.html", iterations + 1, config['image_save_iter'], 'images')
             trainer.cla_inference(test_loader_a, test_loader_b)
-
 
         if (iterations + 1) % config['image_display_iter'] == 0:
             with torch.no_grad():
