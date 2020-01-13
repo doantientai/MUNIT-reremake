@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_LL1k_debug_save_model', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_4l_LL10k_debug', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 # parser.add_argument("--resume", default=True)
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
@@ -92,14 +92,16 @@ while True:
             zip(train_loader_a, train_loader_b, train_loader_a_limited)):
         # images_a, labels_a = samples_a
         images_a, _ = samples_a
-        images_a_limited, labels_a_limited = samples_a_limited
+        # images_a_limited, labels_a_limited = samples_a_limited
+        images_a_limited = samples_a_limited[0]
         images_b, labels_b = samples_b
 
         trainer.update_learning_rate()
         images_a, images_b = images_a.cuda().detach(), images_b.cuda().detach()
         # labels_a, labels_b = labels_a.cuda().detach(), labels_b.cuda().detach()
         labels_b = labels_b.cuda().detach()
-        images_a_limited, labels_a_limited = images_a_limited.cuda().detach(), labels_a_limited.cuda().detach()
+        # images_a_limited, labels_a_limited = images_a_limited.cuda().detach(), labels_a_limited.cuda().detach()
+        images_a_limited = images_a_limited.cuda().detach()
 
         with Timer("Elapsed time in update: %f"):
             # Main training code
@@ -109,11 +111,11 @@ while True:
             # time_dis = time()
             # print(f'Dis: {time_dis - time_start_iter}', end=" ")
 
-            trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
+            trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, 0])
             # time_gen = time()
             # print(f'Gen: {time_gen - time_dis}', end=" ")
 
-            trainer.cla_update([images_a_limited, labels_a_limited], [images_b, labels_b])
+            trainer.cla_update([images_a_limited, 0], [images_b, labels_b])
             # time_con_cla = time()
             # print(f'Cla: {time_con_cla - time_gen}')
 
