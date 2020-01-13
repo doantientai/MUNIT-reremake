@@ -92,8 +92,8 @@ while True:
             zip(train_loader_a, train_loader_b, train_loader_a_limited)):
         # images_a, labels_a = samples_a
         images_a, _ = samples_a
-        # images_a_limited, labels_a_limited = samples_a_limited
-        images_a_limited = samples_a_limited[0]
+        images_a_limited, labels_a_limited = samples_a_limited
+        # images_a_limited = samples_a_limited[0]
         images_b, labels_b = samples_b
 
         trainer.update_learning_rate()
@@ -111,11 +111,11 @@ while True:
             # time_dis = time()
             # print(f'Dis: {time_dis - time_start_iter}', end=" ")
 
-            trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, 0])
+            trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
             # time_gen = time()
             # print(f'Gen: {time_gen - time_dis}', end=" ")
 
-            trainer.cla_update([images_a_limited, 0], [images_b, labels_b])
+            trainer.cla_update([images_a_limited, labels_a_limited], [images_b, labels_b])
             # time_con_cla = time()
             # print(f'Cla: {time_con_cla - time_gen}')
 
