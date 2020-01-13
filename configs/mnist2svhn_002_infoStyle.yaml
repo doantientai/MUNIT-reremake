@@ -59,4 +59,4 @@ crop_image_width: 32                       # random crop image of this width
 #data_root: /media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn     # dataset folder location
 #data_root: /home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels
 data_root: /media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels     # dataset folder location
-folder_limited: trainA_1k
+folder_limited: trainA_10k

@@ -287,12 +287,11 @@ class MUNIT_Trainer(nn.Module):
 
         self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
         self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
-        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
+        # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_a_recon, label_predict_c_a)
 
         self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
-        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon,
-                                                                                         label_predict_c_b)
+        # self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(label_predict_c_b_recon, label_predict_c_b)
 
         # self.accu_content_classifier_c_a = self.compute_content_classifier_accuracy(label_predict_c_a, label_a)
         # self.accu_content_classifier_c_a_recon = self.compute_content_classifier_accuracy(label_predict_c_a_recon,
@@ -308,9 +307,9 @@ class MUNIT_Trainer(nn.Module):
         # ])
 
         self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
-                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
-                              self.loss_content_classifier_c_a_and_c_a_recon + \
-                              self.loss_content_classifier_c_b_and_c_b_recon
+                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon
+                              # self.loss_content_classifier_c_a_and_c_a_recon + \
+                              # self.loss_content_classifier_c_b_and_c_b_recon
         self.loss_cla_total.backward()
         self.cla_opt.step()
 
