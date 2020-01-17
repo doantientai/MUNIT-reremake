@@ -25,46 +25,46 @@ def default_flist_reader(flist):
     return imlist
 
 
-class ImageFilelist(data.Dataset):
-    def __init__(self, root, flist, transform=None,
-                 flist_reader=default_flist_reader, loader=default_loader):
-        self.root = root
-        self.imlist = flist_reader(flist)
-        self.transform = transform
-        self.loader = loader
+# class ImageFilelist(data.Dataset):
+#     def __init__(self, root, flist, transform=None,
+#                  flist_reader=default_flist_reader, loader=default_loader):
+#         self.root = root
+#         self.imlist = flist_reader(flist)
+#         self.transform = transform
+#         self.loader = loader
+#
+#     def __getitem__(self, index):
+#         impath = self.imlist[index]
+#         img = self.loader(os.path.join(self.root, impath))
+#         if self.transform is not None:
+#             img = self.transform(img)
+#
+#         return img
+#
+#     def __len__(self):
+#         return len(self.imlist)
 
-    def __getitem__(self, index):
-        impath = self.imlist[index]
-        img = self.loader(os.path.join(self.root, impath))
-        if self.transform is not None:
-            img = self.transform(img)
 
-        return img
-
-    def __len__(self):
-        return len(self.imlist)
-
-
-class ImageLabelFilelist(data.Dataset):
-    def __init__(self, root, flist, transform=None,
-                 flist_reader=default_flist_reader, loader=default_loader):
-        self.root = root
-        self.imlist = flist_reader(os.path.join(self.root, flist))
-        self.transform = transform
-        self.loader = loader
-        self.classes = sorted(list(set([path.split('/')[0] for path in self.imlist])))
-        self.class_to_idx = {self.classes[i]: i for i in range(len(self.classes))}
-        self.imgs = [(impath, self.class_to_idx[impath.split('/')[0]]) for impath in self.imlist]
-
-    def __getitem__(self, index):
-        impath, label = self.imgs[index]
-        img = self.loader(os.path.join(self.root, impath))
-        if self.transform is not None:
-            img = self.transform(img)
-        return img, label
-
-    def __len__(self):
-        return len(self.imgs)
+# class ImageLabelFilelist(data.Dataset):
+#     def __init__(self, root, flist, transform=None,
+#                  flist_reader=default_flist_reader, loader=default_loader):
+#         self.root = root
+#         self.imlist = flist_reader(os.path.join(self.root, flist))
+#         self.transform = transform
+#         self.loader = loader
+#         self.classes = sorted(list(set([path.split('/')[0] for path in self.imlist])))
+#         self.class_to_idx = {self.classes[i]: i for i in range(len(self.classes))}
+#         self.imgs = [(impath, self.class_to_idx[impath.split('/')[0]]) for impath in self.imlist]
+#
+#     def __getitem__(self, index):
+#         impath, label = self.imgs[index]
+#         img = self.loader(os.path.join(self.root, impath))
+#         if self.transform is not None:
+#             img = self.transform(img)
+#         return img, label
+#
+#     def __len__(self):
+#         return len(self.imgs)
 
 
 ###############################################################################
@@ -171,3 +171,5 @@ class ImageFolderTorchVision(DatasetFolder):
             self.samples = self.samples[:num_samples]
             self.targets = [x[1] for x in self.samples[:num_samples]]
             self.imgs = self.samples[:num_samples]
+
+
