@@ -9,7 +9,7 @@ from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torchvision import transforms
 # from torchvision.datasets.folder import ImageFolder as ImageFolderTorchVision
-from data import ImageFilelist, ImageFolder, ImageFolderTorchVision
+from data import ImageFolder, ImageFolderTorchVision, H5Dataset
 import torch
 import torch.nn as nn
 import os
@@ -55,16 +55,30 @@ def get_all_data_loaders(conf):
     # if 'data_root' in conf:
     assert 'data_root' in conf
     if True:
-        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
-                                              new_size_a, height, width, num_workers, True, flip_lf=False)
-        train_loader_a_limited = get_data_loader_folder(os.path.join(conf['data_root'], conf['folder_limited']), batch_size, True,
-                                                new_size_a, height, width, num_workers, True, flip_lf=False)
-        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'trainB'), batch_size, True,
-                                              new_size_b, height, width, num_workers, True, flip_lf=False)
-        test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size_val, False,
-                                             new_size_a, new_size_a, new_size_a, num_workers, True)
-        test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'testB'), batch_size_val, False,
-                                             new_size_b, new_size_b, new_size_b, num_workers, True)
+        # train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
+        #                                       new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_a_limited = get_data_loader_folder(os.path.join(conf['data_root'], conf['folder_limited']), batch_size, True,
+        #                                         new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'trainB'), batch_size, True,
+        #                                       new_size_b, height, width, num_workers, True, flip_lf=False)
+        # test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size_val, False,
+        #                                      new_size_a, new_size_a, new_size_a, num_workers, True)
+        # test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'testB'), batch_size_val, False,
+        #                                      new_size_b, new_size_b, new_size_b, num_workers, True)
+
+        train_loader_a = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA/images.h5',
+                                            batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        train_loader_a_limited = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA_50/images.h5',
+                                                    batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        train_loader_b = get_data_loader_h5(
+            '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainB/images.h5',
+            batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        test_loader_a = get_data_loader_h5(
+            '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testA/images.h5',
+            batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
+        test_loader_b = get_data_loader_h5(
+            '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testB/images.h5',
+            batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
     # else:
     #     train_loader_a = get_data_loader_list(conf['data_folder_train_a'], conf['data_list_train_a'], batch_size, True,
     #                                             new_size_a, height, width, num_workers, True)
@@ -124,6 +138,23 @@ def get_data_loader_folder_for_test(input_folder, batch_size, train, new_size=No
     transform = transforms.Compose(transform_list)
     dataset = ImageFolder(input_folder, transform=transform)
     # dataset = ImageFolderTorchVision(input_folder, transform=transform)
+    loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
+    return loader
+
+
+def get_data_loader_h5(input_folder, batch_size, train, new_size=None,
+                           height=256, width=256, num_workers=4, crop=True, flip_lf=True):
+    transform_list = [transforms.ToTensor(),
+                      transforms.Normalize((0.5, 0.5, 0.5),
+                                           (0.5, 0.5, 0.5))]
+    # transform_list = transform_list + [transforms.RandomCrop((height, width))] if crop else transform_list
+    # transform_list = transform_list + [transforms.Resize(new_size)] if new_size is not None else transform_list
+    if train and flip_lf:
+        transform_list = [transforms.RandomHorizontalFlip()] + transform_list
+
+    transform = transforms.Compose(transform_list)
+    dataset = H5Dataset(input_folder, transform=transform, load_labels=True)
+
     loader = DataLoader(dataset=dataset, batch_size=batch_size, shuffle=train, drop_last=True, num_workers=num_workers)
     return loader
 

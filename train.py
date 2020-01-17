@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC4l_4shot', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC4l_4shot_4workers', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 # parser.add_argument("--resume", default=True)
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
@@ -123,6 +123,7 @@ while True:
         if (iterations + 1) % config['log_iter'] == 0:
             print("Iteration: %08d/%08d" % (iterations + 1, max_iter))
             write_loss(iterations, trainer, train_writer)
+            sys.exit('Stop it!!')
 
         # Write images
         if (iterations + 1) % config['image_save_iter'] == 0:

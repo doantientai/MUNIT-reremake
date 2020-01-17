@@ -2,10 +2,13 @@
 Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
+import torch
 import torch.utils.data as data
 from torchvision.datasets.folder import DatasetFolder
 import os.path
 from random import shuffle
+import h5py
+import numpy as np
 
 
 def default_loader(path):
@@ -173,3 +176,26 @@ class ImageFolderTorchVision(DatasetFolder):
             self.imgs = self.samples[:num_samples]
 
 
+class H5Dataset(data.Dataset):
+    def __init__(self, file_path, load_labels=False, transform=None):
+        super(H5Dataset, self).__init__()
+        h5_file = h5py.File(file_path)
+        self.transform = transform
+        self.images = h5_file.get('images')
+        self.targets = None
+        self.classes = []
+        if load_labels:
+            h5_file_labels = h5py.File(file_path.replace('images.h5', 'labels.h5'))
+            self.targets = h5_file_labels.get('labels')
+            self.classes = np.unique(self.targets)
+
+    def __getitem__(self, index):
+        img = self.images[index, :, :, :]
+        label = self.targets[index]
+        # label = torch.from_numpy(self.targets[index]).float()
+        if self.transform is not None:
+            img = self.transform(img)
+        return img, label
+
+    def __len__(self):
+        return self.images.shape[0]
