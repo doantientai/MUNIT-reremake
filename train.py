@@ -123,7 +123,6 @@ while True:
         if (iterations + 1) % config['log_iter'] == 0:
             print("Iteration: %08d/%08d" % (iterations + 1, max_iter))
             write_loss(iterations, trainer, train_writer)
-            sys.exit('Stop it!!')
 
         # Write images
         if (iterations + 1) % config['image_save_iter'] == 0:

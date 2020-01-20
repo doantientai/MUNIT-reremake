@@ -55,30 +55,30 @@ def get_all_data_loaders(conf):
     # if 'data_root' in conf:
     assert 'data_root' in conf
     if True:
-        # train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
-        #                                       new_size_a, height, width, num_workers, True, flip_lf=False)
-        # train_loader_a_limited = get_data_loader_folder(os.path.join(conf['data_root'], conf['folder_limited']), batch_size, True,
-        #                                         new_size_a, height, width, num_workers, True, flip_lf=False)
-        # train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'trainB'), batch_size, True,
-        #                                       new_size_b, height, width, num_workers, True, flip_lf=False)
-        # test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size_val, False,
-        #                                      new_size_a, new_size_a, new_size_a, num_workers, True)
-        # test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'testB'), batch_size_val, False,
-        #                                      new_size_b, new_size_b, new_size_b, num_workers, True)
+        train_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'trainA'), batch_size, True,
+                                              new_size_a, height, width, num_workers, True, flip_lf=False)
+        train_loader_a_limited = get_data_loader_folder(os.path.join(conf['data_root'], conf['folder_limited']), batch_size, True,
+                                                new_size_a, height, width, num_workers, True, flip_lf=False)
+        train_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'trainB'), batch_size, True,
+                                              new_size_b, height, width, num_workers, True, flip_lf=False)
+        test_loader_a = get_data_loader_folder(os.path.join(conf['data_root'], 'testA'), batch_size_val, False,
+                                             new_size_a, new_size_a, new_size_a, num_workers, True)
+        test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'testB'), batch_size_val, False,
+                                             new_size_b, new_size_b, new_size_b, num_workers, True)
 
-        train_loader_a = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA/images.h5',
-                                            batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
-        train_loader_a_limited = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA_50/images.h5',
-                                                    batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
-        train_loader_b = get_data_loader_h5(
-            '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainB/images.h5',
-            batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
-        test_loader_a = get_data_loader_h5(
-            '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testA/images.h5',
-            batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
-        test_loader_b = get_data_loader_h5(
-            '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testB/images.h5',
-            batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_a = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA/images.h5',
+        #                                     batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_a_limited = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA_50/images.h5',
+        #                                             batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_b = get_data_loader_h5(
+        #     '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainB/images.h5',
+        #     batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # test_loader_a = get_data_loader_h5(
+        #     '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testA/images.h5',
+        #     batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # test_loader_b = get_data_loader_h5(
+        #     '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testB/images.h5',
+        #     batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
     # else:
     #     train_loader_a = get_data_loader_list(conf['data_folder_train_a'], conf['data_list_train_a'], batch_size, True,
     #                                             new_size_a, height, width, num_workers, True)
