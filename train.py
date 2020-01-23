@@ -113,7 +113,7 @@ while True:
             # time_gen = time()
             # print(f'Gen: {time_gen - time_dis}', end=" ")
 
-            trainer.cla_update([images_a_limited, labels_a_limited], [images_b, labels_b])
+            trainer.cla_update(images_a, [images_a_limited, labels_a_limited], [images_b, labels_b])
             # time_con_cla = time()
             # print(f'Cla: {time_con_cla - time_gen}')
 
