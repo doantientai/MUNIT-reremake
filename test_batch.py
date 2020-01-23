@@ -92,7 +92,7 @@ label = 9
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/trainB/'+str(label), type=str)
 
 # LIMIT_SAMPLE = 4000
-parser.add_argument('--num_style', type=int, default=1, help="number of styles to sample")
+# parser.add_argument('--num_style', type=int, default=1, help="number of styles to sample")
 parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/trainB/'+str(label), type=str)
 
 # parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC6l_LL1k_downloaded/outputs/mnist2svhn_002_infoStyle/checkpoints/gen_00370000.pt', type=str, help="checkpoint of autoencoders")
@@ -124,10 +124,22 @@ parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/InfoMUNIT
 # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/augmented_by_infoMUNIT/MUNIT_CC4l_1shot/ckpt370k/trainA_10_B_full_generated/'+str(label), type=str, help="output image path")
 # LIMIT_SAMPLE = None
 
-### CC6l one shot
-parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_LL10/gen_00320000.pt', type=str, help="checkpoint of autoencoders")
-parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/augmented_by_infoMUNIT/MUNIT_CC6l_1shot/ckpt320k/trainA_10_B_full_generated/'+str(label), type=str, help="output image path")
+# ### CC4 one shot B_full x2
+# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC4l_1shot/gen_00370000.pt', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/augmented_by_infoMUNIT/MUNIT_CC4l_1shot/ckpt370k/trainA_10_B_full_x2_generated/'+str(label), type=str, help="output image path")
+# parser.add_argument('--num_style', type=int, default=2, help="number of styles to sample")
+# LIMIT_SAMPLE = None
+
+### CC4 one shot B_full x4
+parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC4l_1shot/gen_00370000.pt', type=str, help="checkpoint of autoencoders")
+parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/augmented_by_infoMUNIT/MUNIT_CC4l_1shot/ckpt370k/trainA_10_B_full_x4_generated/'+str(label), type=str, help="output image path")
+parser.add_argument('--num_style', type=int, default=4, help="number of styles to sample")
 LIMIT_SAMPLE = None
+
+# ### CC6l one shot
+# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC_6l_LL10/gen_00320000.pt', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels/augmented_by_infoMUNIT/MUNIT_CC6l_1shot/ckpt320k/trainA_10_B_full_generated/'+str(label), type=str, help="output image path")
+# LIMIT_SAMPLE = None
 
 # ### CC4 20 shots
 # parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC4l_LL200/gen_00370000.pt', type=str, help="checkpoint of autoencoders")
