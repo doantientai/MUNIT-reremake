@@ -58,16 +58,30 @@ class MUNIT_Trainer(nn.Module):
         beta2 = hyperparameters['beta2']
         # dis_params = list(self.dis_a.parameters()) + list(self.dis_b.parameters())
         gen_params = list(self.gen_a.parameters()) + list(self.gen_b.parameters())
+        # split params of the auto-encoder
+        enc_style_params = list()
+        enc_content_params = list()
+        dec_params = list()
+        # gen_params = list()
+        for name, param in (list(self.gen_a.named_parameters()) + list(self.gen_b.named_parameters())):
+            if "enc_style.model" in name:
+                enc_style_params.append(param)
+            elif "enc_content.model" in name:
+                enc_content_params.append(param)
+            elif ("dec.model" in name) or ("mlp.model" in name):
+                dec_params.append(param)
+            else:
+                raise("weird param", name)
 
         dis_named_params = list(self.dis_a.named_parameters()) + list(self.dis_b.named_parameters())
         # gen_named_params = list(self.gen_a.named_parameters()) + list(self.gen_b.named_parameters())
 
         ### modifying list params
         dis_params = list()
-        # gen_params = list()
         for name, param in dis_named_params:
             if "_Q" in name:
                 # print('%s --> gen_params' % name)
+                dec_params.append(param)
                 gen_params.append(param)
             else:
                 dis_params.append(param)
@@ -78,10 +92,19 @@ class MUNIT_Trainer(nn.Module):
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
         self.gen_opt = torch.optim.Adam([p for p in gen_params if p.requires_grad],
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.enc_style_opt = torch.optim.Adam([p for p in enc_style_params if p.requires_grad],
+                                              lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.enc_content_opt = torch.optim.Adam([p for p in enc_content_params if p.requires_grad],
+                                                lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.dec_opt = torch.optim.Adam([p for p in dec_params if p.requires_grad], lr=lr, betas=(beta1, beta2),
+                                        weight_decay=hyperparameters['weight_decay'])
         self.cla_opt = torch.optim.Adam([p for p in content_classifier_params if p.requires_grad],
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
+        self.enc_style_scheduler = get_scheduler(self.enc_style_opt, hyperparameters)
+        self.enc_content_scheduler = get_scheduler(self.enc_content_opt, hyperparameters)
+        self.dec_scheduler = get_scheduler(self.dec_opt, hyperparameters)
         self.cla_scheduler = get_scheduler(self.cla_opt, hyperparameters)
 
         # Network weight initialization
@@ -131,6 +154,10 @@ class MUNIT_Trainer(nn.Module):
         x_a_limited, label_a_limited = sample_a_limited
 
         self.gen_opt.zero_grad()
+
+        # self.enc_style_opt.zero_grad()
+        # self.enc_content_opt.zero_grad()
+
         s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
         s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
         # encode
@@ -166,10 +193,6 @@ class MUNIT_Trainer(nn.Module):
         x_ab_dis_out = self.dis_b(x_ab)
         self.loss_gen_adv_b = self.compute_gen_adv_loss(x_ab_dis_out)
 
-        # loss info continuous
-        self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
-        self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
-
         # label_predict_c_a = self.content_classifier(c_a)
         # label_predict_c_a_recon = self.content_classifier(c_a_recon)
         label_predict_c_b = self.content_classifier(c_b)
@@ -192,16 +215,16 @@ class MUNIT_Trainer(nn.Module):
                                                                                  label_a_limited)
 
         ### loss content prediction b
-        loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        loss_content_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
 
         ### consistency of content prediction
-        label_predict_c_a_unlabeled = self.content_classifier(c_a)
-        label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_recon)
-        loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
-            label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
-        loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
-            label_predict_c_b, label_predict_c_b_recon)
+        # label_predict_c_a_unlabeled = self.content_classifier(c_a)
+        # label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_recon)
+        # loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+        #     label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
+        # loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+        #     label_predict_c_b, label_predict_c_b_recon)
 
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
@@ -212,17 +235,39 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_b + \
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_b + \
                               hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
-                              self.info_cont_loss_a + \
-                              self.info_cont_loss_b + \
                               loss_content_classifier_c_a + \
                               loss_content_classifier_c_a_recon + \
-                              loss_content_classifier_b + \
-                              loss_content_classifier_c_b_recon + \
-                              loss_content_classifier_c_a_and_c_a_recon + \
-                              loss_content_classifier_c_b_and_c_b_recon
-
+                              loss_content_classifier_c_b + \
+                              loss_content_classifier_c_b_recon
+                              # loss_content_classifier_c_a_and_c_a_recon + \
+                              # loss_content_classifier_c_b_and_c_b_recon
         self.loss_gen_total.backward()
         self.gen_opt.step()
+
+        self.dec_opt.zero_grad()
+
+    def dec_update_for_info_loss(self, x_a, sample_b, hyperparameters, sample_a_limited):
+        x_b, label_b = sample_b
+        # x_a_limited, label_a_limited = sample_a_limited
+        self.dec_opt.zero_grad()
+
+        s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+
+        c_b, s_b_prime = self.gen_b.encode(x_b)
+        x_ba = self.gen_a.decode(c_b, s_a)
+        x_ba_dis_out = self.dis_a(x_ba)
+
+        c_a, s_a_prime = self.gen_a.encode(x_a)
+        x_ab = self.gen_b.decode(c_a, s_b)
+        x_ab_dis_out = self.dis_b(x_ab)
+        #
+        self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
+        self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
+        #
+        self.loss_enc_content = self.info_cont_loss_a + self.info_cont_loss_b
+        self.loss_enc_content.backward()
+        self.dec_opt.step()
 
     def compute_info_cont_loss(self, style_code, outs_fake):
         loss = 0
@@ -306,8 +351,8 @@ class MUNIT_Trainer(nn.Module):
         ### consistency of content-label prediction on unlabeled samples from target domain
         label_predict_c_a_unlabeled = self.content_classifier(c_a_unlabeled)
         label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_unlabeled_recon)
-        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
-            label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
+        # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+        #     label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
 
         ### content prediction loss on labeled samples (and their reconstructed samples) from target domain
         self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a_limited)
@@ -315,15 +360,15 @@ class MUNIT_Trainer(nn.Module):
                                                                                       label_a_limited)
 
         ### the 3 losses above on samples from source domain which are all labeled
-        self.loss_content_classifier_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        self.loss_content_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
-        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
-            label_predict_c_b_recon, label_predict_c_b)
+        # self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+        #     label_predict_c_b_recon, label_predict_c_b)
 
         self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
-                              self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
-                              self.loss_content_classifier_c_a_and_c_a_recon + \
-                              self.loss_content_classifier_c_b_and_c_b_recon
+                              self.loss_content_classifier_c_b + self.loss_content_classifier_c_b_recon
+                              # self.loss_content_classifier_c_a_and_c_a_recon + \
+                              # self.loss_content_classifier_c_b_and_c_b_recon
         self.loss_cla_total.backward()
         self.cla_opt.step()
 
@@ -510,6 +555,12 @@ class MUNIT_Trainer(nn.Module):
             self.dis_scheduler.step()
         if self.gen_scheduler is not None:
             self.gen_scheduler.step()
+        if self.enc_style_scheduler is not None:
+            self.enc_style_scheduler.step()
+        if self.enc_content_scheduler is not None:
+            self.enc_content_scheduler.step()
+        if self.dec_scheduler is not None:
+            self.dec_scheduler.step()
 
     def resume(self, checkpoint_dir, hyperparameters):
         # Load generators
@@ -535,6 +586,9 @@ class MUNIT_Trainer(nn.Module):
         # Reinitilize schedulers
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
+        self.enc_style_scheduler = get_scheduler(self.enc_style_opt, hyperparameters, iterations)
+        self.enc_content_scheduler = get_scheduler(self.enc_content_opt, hyperparameters, iterations)
+        self.dec_scheduler = get_scheduler(self.dec_opt, hyperparameters, iterations)
         self.cla_scheduler = get_scheduler(self.cla_opt, hyperparameters, iterations)
         print('Resume from iteration %d' % iterations)
         return iterations

@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--config', type=str, default='configs/mnist2svhn_002_infoStyle.yaml', help='Path to the config file.')
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/MUNIT-reremake/Models/debug', help="output path server")
 # parser.add_argument('--output_path', type=str, default='/home/tai/Desktop/MUNIT-reremake-log/debug', help="outputs path")
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/MUNIT_CC6lU_1shot', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/MUNIT-reremake/debug', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 # parser.add_argument("--resume", default=True)
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
@@ -112,6 +112,8 @@ while True:
             trainer.gen_update(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
             # time_gen = time()
             # print(f'Gen: {time_gen - time_dis}', end=" ")
+
+            # trainer.dec_update_for_info_loss(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
 
             trainer.cla_update(images_a, [images_a_limited, labels_a_limited], [images_b, labels_b])
             # time_con_cla = time()
