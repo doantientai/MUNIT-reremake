@@ -115,7 +115,7 @@ while True:
 
             # trainer.dec_update_for_info_loss(images_a, [images_b, labels_b], config, [images_a_limited, labels_a_limited])
 
-            trainer.cla_update(images_a, [images_a_limited, labels_a_limited], [images_b, labels_b])
+            trainer.cla_update(None, [images_a_limited, labels_a_limited], [images_b, labels_b])
             # time_con_cla = time()
             # print(f'Cla: {time_con_cla - time_gen}')
 

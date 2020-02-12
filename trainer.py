@@ -344,13 +344,13 @@ class MUNIT_Trainer(nn.Module):
         label_predict_c_b_recon = self.content_classifier(c_b_recon)
 
         ### extract x_a_unlabeled
-        c_a_unlabeled, s_a_unlabeled = self.gen_a.encode(x_a_unlabeled)
-        x_a_unlabeled_recon = self.gen_a.decode(c_a_unlabeled, s_a_unlabeled)
-        c_a_unlabeled_recon, _ = self.gen_a.encode(x_a_unlabeled_recon)
+        # c_a_unlabeled, s_a_unlabeled = self.gen_a.encode(x_a_unlabeled)
+        # x_a_unlabeled_recon = self.gen_a.decode(c_a_unlabeled, s_a_unlabeled)
+        # c_a_unlabeled_recon, _ = self.gen_a.encode(x_a_unlabeled_recon)
 
         ### consistency of content-label prediction on unlabeled samples from target domain
-        label_predict_c_a_unlabeled = self.content_classifier(c_a_unlabeled)
-        label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_unlabeled_recon)
+        # label_predict_c_a_unlabeled = self.content_classifier(c_a_unlabeled)
+        # label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_unlabeled_recon)
         # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
         #     label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
 
@@ -488,7 +488,7 @@ class MUNIT_Trainer(nn.Module):
         # exit()
         return loss
 
-    def compute_content_classifier_accuracy(self, label_predict, label_true):
+    def compute_content_classifier_accuracy(self, label_predict, label_true, custom_batch_size_val=None):
         # print("label_true")
         # print(label_true)
         #
@@ -508,8 +508,10 @@ class MUNIT_Trainer(nn.Module):
         # total_samples = results.size()
         # print("total_samples")
         # print(total_samples)
-
-        accuracy = float(total_correct) / float(self.batch_size_val)
+        if custom_batch_size_val is None:
+            accuracy = float(total_correct) / float(self.batch_size_val)
+        else:
+            accuracy = float(total_correct) / float(custom_batch_size_val)
         # print("accuracy")
         # print(accuracy)
         #
