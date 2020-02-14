@@ -13,23 +13,23 @@ import numpy as np
 import pytorch_msssim
 
 
-class NormalNLLLoss:
-    """
-    Calculate the negative log likelihood
-    of normal distribution.
-    This needs to be minimised.
-
-    Treating Q(cj | x) as a factored Gaussian.
-    """
-
-    def __call__(self, x, mu, var):
-        A = -0.5 * (var.mul(2 * np.pi) + 1e-6).log()
-        B = (x - mu)
-        C = B.pow(2).div(var.mul(2.0) + 1e-6)
-        logli = A - C
-        nll = -(logli.sum(1).mean())
-
-        return nll
+# class NormalNLLLoss:
+#     """
+#     Calculate the negative log likelihood
+#     of normal distribution.
+#     This needs to be minimised.
+#
+#     Treating Q(cj | x) as a factored Gaussian.
+#     """
+#
+#     def __call__(self, x, mu, var):
+#         A = -0.5 * (var.mul(2 * np.pi) + 1e-6).log()
+#         B = (x - mu)
+#         C = B.pow(2).div(var.mul(2.0) + 1e-6)
+#         logli = A - C
+#         nll = -(logli.sum(1).mean())
+#
+#         return nll
 
 
 class MUNIT_Trainer(nn.Module):
@@ -122,7 +122,7 @@ class MUNIT_Trainer(nn.Module):
                 param.requires_grad = False
 
         self.gan_type = hyperparameters['dis']['gan_type']
-        self.criterionQ_con = NormalNLLLoss()
+        # self.criterionQ_con = NormalNLLLoss()
 
         self.criterion_content_classifier = nn.CrossEntropyLoss()
 
@@ -195,15 +195,11 @@ class MUNIT_Trainer(nn.Module):
 
         # label_predict_c_a = self.content_classifier(c_a)
         # label_predict_c_a_recon = self.content_classifier(c_a_recon)
-        label_predict_c_b = self.content_classifier(c_b)
-        label_predict_c_b_recon = self.content_classifier(c_b_recon)
-
-        # loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
-        # loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
-
-        ### compute loss of classifier c_a based on limited samples
         c_a_limited, _ = self.gen_a.encode(x_a_limited)
         label_predict_c_a_limited = self.content_classifier(c_a_limited)
+
+        label_predict_c_b = self.content_classifier(c_b)
+        label_predict_c_b_recon = self.content_classifier(c_b_recon)
 
         x_ab_limited = self.gen_b.decode(c_a_limited, s_b)
         c_a_recon_limited, _ = self.gen_b.encode(x_ab_limited)
@@ -219,12 +215,12 @@ class MUNIT_Trainer(nn.Module):
         loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
 
         ### consistency of content prediction
-        # label_predict_c_a_unlabeled = self.content_classifier(c_a)
-        # label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_recon)
-        # loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
-        #     label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
-        # loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
-        #     label_predict_c_b, label_predict_c_b_recon)
+        label_predict_c_a_unlabeled = self.content_classifier(c_a)
+        label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_recon)
+        loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
+        loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_c_b, label_predict_c_b_recon)
 
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
@@ -238,51 +234,51 @@ class MUNIT_Trainer(nn.Module):
                               loss_content_classifier_c_a + \
                               loss_content_classifier_c_a_recon + \
                               loss_content_classifier_c_b + \
-                              loss_content_classifier_c_b_recon
-                              # loss_content_classifier_c_a_and_c_a_recon + \
-                              # loss_content_classifier_c_b_and_c_b_recon
+                              loss_content_classifier_c_b_recon +\
+                              loss_content_classifier_c_a_and_c_a_recon + \
+                              loss_content_classifier_c_b_and_c_b_recon
         self.loss_gen_total.backward()
         self.gen_opt.step()
 
         self.dec_opt.zero_grad()
 
-    def dec_update_for_info_loss(self, x_a, sample_b, hyperparameters, sample_a_limited):
-        x_b, label_b = sample_b
-        # x_a_limited, label_a_limited = sample_a_limited
-        self.dec_opt.zero_grad()
+    # def dec_update_for_info_loss(self, x_a, sample_b, hyperparameters, sample_a_limited):
+    #     x_b, label_b = sample_b
+    #     # x_a_limited, label_a_limited = sample_a_limited
+    #     self.dec_opt.zero_grad()
+    #
+    #     s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+    #     s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+    #
+    #     c_b, s_b_prime = self.gen_b.encode(x_b)
+    #     x_ba = self.gen_a.decode(c_b, s_a)
+    #     x_ba_dis_out = self.dis_a(x_ba)
+    #
+    #     c_a, s_a_prime = self.gen_a.encode(x_a)
+    #     x_ab = self.gen_b.decode(c_a, s_b)
+    #     x_ab_dis_out = self.dis_b(x_ab)
+    #     #
+    #     self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
+    #     self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
+    #     #
+    #     self.loss_enc_content = self.info_cont_loss_a + self.info_cont_loss_b
+    #     self.loss_enc_content.backward()
+    #     self.dec_opt.step()
 
-        s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
-
-        c_b, s_b_prime = self.gen_b.encode(x_b)
-        x_ba = self.gen_a.decode(c_b, s_a)
-        x_ba_dis_out = self.dis_a(x_ba)
-
-        c_a, s_a_prime = self.gen_a.encode(x_a)
-        x_ab = self.gen_b.decode(c_a, s_b)
-        x_ab_dis_out = self.dis_b(x_ab)
-        #
-        self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
-        self.info_cont_loss_b = self.compute_info_cont_loss(s_b, x_ab_dis_out)
-        #
-        self.loss_enc_content = self.info_cont_loss_a + self.info_cont_loss_b
-        self.loss_enc_content.backward()
-        self.dec_opt.step()
-
-    def compute_info_cont_loss(self, style_code, outs_fake):
-        loss = 0
-        num_cont_code = self.num_con_c
-        for it, (out_fake) in enumerate(outs_fake):
-            q_mu = out_fake['mu']
-            q_var = out_fake['var']
-            info_noise = style_code[:, -num_cont_code:].view(-1, num_cont_code).squeeze().squeeze()
-            # print(q_mu.size())
-            # print(q_var.size())
-            # print(info_noise.size())
-            # print(num_cont_code)
-            # exit()
-            loss += self.criterionQ_con(info_noise, q_mu, q_var) * 0.1
-        return loss
+    # def compute_info_cont_loss(self, style_code, outs_fake):
+    #     loss = 0
+    #     num_cont_code = self.num_con_c
+    #     for it, (out_fake) in enumerate(outs_fake):
+    #         q_mu = out_fake['mu']
+    #         q_var = out_fake['var']
+    #         info_noise = style_code[:, -num_cont_code:].view(-1, num_cont_code).squeeze().squeeze()
+    #         # print(q_mu.size())
+    #         # print(q_var.size())
+    #         # print(info_noise.size())
+    #         # print(num_cont_code)
+    #         # exit()
+    #         loss += self.criterionQ_con(info_noise, q_mu, q_var) * 0.1
+    #     return loss
 
     def compute_vgg_loss(self, vgg, img, target):
         img_vgg = vgg_preprocess(img)
@@ -344,15 +340,15 @@ class MUNIT_Trainer(nn.Module):
         label_predict_c_b_recon = self.content_classifier(c_b_recon)
 
         ### extract x_a_unlabeled
-        # c_a_unlabeled, s_a_unlabeled = self.gen_a.encode(x_a_unlabeled)
-        # x_a_unlabeled_recon = self.gen_a.decode(c_a_unlabeled, s_a_unlabeled)
-        # c_a_unlabeled_recon, _ = self.gen_a.encode(x_a_unlabeled_recon)
+        c_a_unlabeled, s_a_unlabeled = self.gen_a.encode(x_a_unlabeled)
+        x_a_unlabeled_recon = self.gen_a.decode(c_a_unlabeled, s_a_unlabeled)
+        c_a_unlabeled_recon, _ = self.gen_a.encode(x_a_unlabeled_recon)
 
         ### consistency of content-label prediction on unlabeled samples from target domain
-        # label_predict_c_a_unlabeled = self.content_classifier(c_a_unlabeled)
-        # label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_unlabeled_recon)
-        # self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
-        #     label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
+        label_predict_c_a_unlabeled = self.content_classifier(c_a_unlabeled)
+        label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_unlabeled_recon)
+        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
 
         ### content prediction loss on labeled samples (and their reconstructed samples) from target domain
         self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a_limited)
@@ -362,13 +358,13 @@ class MUNIT_Trainer(nn.Module):
         ### the 3 losses above on samples from source domain which are all labeled
         self.loss_content_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
         self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
-        # self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
-        #     label_predict_c_b_recon, label_predict_c_b)
+        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_c_b_recon, label_predict_c_b)
 
         self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
-                              self.loss_content_classifier_c_b + self.loss_content_classifier_c_b_recon
-                              # self.loss_content_classifier_c_a_and_c_a_recon + \
-                              # self.loss_content_classifier_c_b_and_c_b_recon
+                              self.loss_content_classifier_c_b + self.loss_content_classifier_c_b_recon + \
+                              self.loss_content_classifier_c_a_and_c_a_recon + \
+                              self.loss_content_classifier_c_b_and_c_b_recon
         self.loss_cla_total.backward()
         self.cla_opt.step()
 
