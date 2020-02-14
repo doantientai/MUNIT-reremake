@@ -8,11 +8,9 @@ display_size: 10               # How many images do you want to display each tim
 snapshot_save_iter: 10000     # How often do you want to save trained models
 log_iter: 100                   # How often do you want to log the training stats
 
-
 # optimization options
 max_iter: 1000000             # maximum number of training iterations
 batch_size: 128                 # batch size
-batch_size_val: 128
 weight_decay: 0.0001          # weight decay
 beta1: 0.5                    # Adam parameter
 beta2: 0.999                  # Adam parameter
@@ -59,4 +57,4 @@ crop_image_width: 32                       # random crop image of this width
 #data_root: /media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn     # dataset folder location
 #data_root: /home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels
 data_root: /media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT/mnist2svhn_w_labels     # dataset folder location
-folder_limited: trainA_50
+folder_limited: trainA_10
