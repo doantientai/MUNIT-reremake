@@ -201,31 +201,57 @@ class MUNIT_Trainer(nn.Module):
         # label_predict_c_a = self.content_classifier(c_a)
         # label_predict_c_a_recon = self.content_classifier(c_a_recon)
         c_a_limited, _ = self.gen_a.encode(x_a_limited)
-        label_predict_c_a_limited = self.content_digit_classifier(c_a_limited)
+        label_predict_digit_c_a_limited = self.content_digit_classifier(c_a_limited)
 
-        label_predict_c_b = self.content_digit_classifier(c_b)
-        label_predict_c_b_recon = self.content_digit_classifier(c_b_recon)
+        label_predict_digit_c_b = self.content_digit_classifier(c_b)
+        label_predict_digit_c_b_recon = self.content_digit_classifier(c_b_recon)
 
         x_ab_limited = self.gen_b.decode(c_a_limited, s_b)
         c_a_recon_limited, _ = self.gen_b.encode(x_ab_limited)
-        label_predict_c_a_recon_limited = self.content_digit_classifier(c_a_recon_limited)
+        label_predict_digit_c_a_recon_limited = self.content_digit_classifier(c_a_recon_limited)
 
-        ### loss content prediction a
-        loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a_limited, label_a_limited)
-        loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon_limited,
+        ### loss content digit prediction a
+        loss_content_digit_classifier_c_a = self.compute_content_classifier_loss(label_predict_digit_c_a_limited, label_a_limited)
+        loss_content_digit_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_digit_c_a_recon_limited,
                                                                                  label_a_limited)
 
-        ### loss content prediction b
-        loss_content_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
-        loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        ### loss content digit prediction b
+        loss_content_digit_classifier_c_b = self.compute_content_classifier_loss(label_predict_digit_c_b, label_b)
+        loss_content_digit_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_digit_c_b_recon, label_b)
 
-        ### consistency of content prediction
-        label_predict_c_a_unlabeled = self.content_digit_classifier(c_a)
-        label_predict_c_a_unlabeled_recon = self.content_digit_classifier(c_a_recon)
-        loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
-            label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
-        loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
-            label_predict_c_b, label_predict_c_b_recon)
+        ### consistency of content digit prediction
+        label_predict_digit_c_a_unlabeled = self.content_digit_classifier(c_a)
+        label_predict_digit_c_a_unlabeled_recon = self.content_digit_classifier(c_a_recon)
+        loss_content_digit_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_digit_c_a_unlabeled, label_predict_digit_c_a_unlabeled_recon)
+        loss_content_digit_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_digit_c_b, label_predict_digit_c_b_recon)
+
+        ##### DOMAIN PREDICTION
+        label_domain_a = Variable(torch.zeros(x_a.size(0)).long().cuda())
+        label_domain_b = Variable(torch.ones(x_b.size(0)).long().cuda())
+
+        ### loss content domain prediction a
+        label_predict_domain_c_a = self.content_domain_classifier(c_a)
+        loss_content_domain_classifier_c_a = self.compute_content_classifier_loss(label_predict_domain_c_a, label_domain_a)
+
+        label_predict_domain_c_a_recon = self.content_domain_classifier(c_a_recon)
+        loss_content_domain_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_domain_c_a_recon, label_domain_a)
+
+        loss_content_domain_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_domain_c_a, label_predict_domain_c_a_recon)
+
+        ### loss content domain prediction b
+        label_predict_domain_c_b = self.content_domain_classifier(c_b)
+        loss_content_domain_classifier_c_b = self.compute_content_classifier_loss(label_predict_domain_c_b,
+                                                                                  label_domain_b)
+
+        label_predict_domain_c_b_recon = self.content_domain_classifier(c_b_recon)
+        loss_content_domain_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_domain_c_b_recon,
+                                                                                        label_domain_b)
+
+        loss_content_domain_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_domain_c_b, label_predict_domain_c_b_recon)
 
         # total loss
         self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
@@ -236,12 +262,19 @@ class MUNIT_Trainer(nn.Module):
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_b + \
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_b + \
                               hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
-                              loss_content_classifier_c_a + \
-                              loss_content_classifier_c_a_recon + \
-                              loss_content_classifier_c_b + \
-                              loss_content_classifier_c_b_recon +\
-                              loss_content_classifier_c_a_and_c_a_recon + \
-                              loss_content_classifier_c_b_and_c_b_recon
+                              loss_content_digit_classifier_c_a + \
+                              loss_content_digit_classifier_c_a_recon + \
+                              loss_content_digit_classifier_c_b + \
+                              loss_content_digit_classifier_c_b_recon +\
+                              loss_content_digit_classifier_c_a_and_c_a_recon + \
+                              loss_content_digit_classifier_c_b_and_c_b_recon + \
+                              loss_content_domain_classifier_c_a + \
+                              loss_content_domain_classifier_c_a_recon + \
+                              loss_content_domain_classifier_c_b + \
+                              loss_content_domain_classifier_c_b_recon + \
+                              loss_content_domain_classifier_c_a_and_c_a_recon + \
+                              loss_content_domain_classifier_c_b_and_c_b_recon
+        
         self.loss_gen_total.backward()
         self.gen_opt.step()
 
