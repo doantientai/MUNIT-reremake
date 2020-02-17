@@ -2,7 +2,7 @@
 Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
-from networks import AdaINGen, MsImageDis, ContentClassifier
+from networks import AdaINGen, MsImageDis, ContentDigitClassifier, ContentDomainClassifier
 from utils import weights_init, get_model_list, vgg_preprocess, load_vgg16, get_scheduler
 from torch.autograd import Variable
 import torch
@@ -10,7 +10,7 @@ import torch.nn as nn
 import os
 import torch.nn.functional as F
 import numpy as np
-import pytorch_msssim
+# import pytorch_msssim
 
 
 # class NormalNLLLoss:
@@ -42,7 +42,8 @@ class MUNIT_Trainer(nn.Module):
         self.dis_a = MsImageDis(hyperparameters['input_dim_a'], hyperparameters['dis'])  # discriminator for domain a
         self.dis_b = MsImageDis(hyperparameters['input_dim_b'], hyperparameters['dis'])  # discriminator for domain b
 
-        self.content_classifier = ContentClassifier(hyperparameters['gen']['dim'], hyperparameters)
+        self.content_digit_classifier = ContentDigitClassifier(hyperparameters['gen']['dim'], hyperparameters)
+        self.content_domain_classifier = ContentDomainClassifier(hyperparameters['gen']['dim'], hyperparameters)
 
         self.instancenorm = nn.InstanceNorm2d(512, affine=False)
         self.style_dim = hyperparameters['gen']['style_dim']
@@ -86,7 +87,8 @@ class MUNIT_Trainer(nn.Module):
             else:
                 dis_params.append(param)
 
-        content_classifier_params = list(self.content_classifier.parameters())
+        content_digit_classifier_params = list(self.content_digit_classifier.parameters())
+        content_domain_classifier_params = list(self.content_domain_classifier.parameters())
 
         self.dis_opt = torch.optim.Adam([p for p in dis_params if p.requires_grad],
                                         lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
@@ -98,21 +100,24 @@ class MUNIT_Trainer(nn.Module):
                                                 lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
         self.dec_opt = torch.optim.Adam([p for p in dec_params if p.requires_grad], lr=lr, betas=(beta1, beta2),
                                         weight_decay=hyperparameters['weight_decay'])
-        self.cla_opt = torch.optim.Adam([p for p in content_classifier_params if p.requires_grad],
-                                        lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.cla_digit_opt = torch.optim.Adam([p for p in content_digit_classifier_params if p.requires_grad],
+                                              lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
+        self.cla_domain_opt = torch.optim.Adam([p for p in content_domain_classifier_params if p.requires_grad],
+                                               lr=lr, betas=(beta1, beta2), weight_decay=hyperparameters['weight_decay'])
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters)
         self.enc_style_scheduler = get_scheduler(self.enc_style_opt, hyperparameters)
         self.enc_content_scheduler = get_scheduler(self.enc_content_opt, hyperparameters)
         self.dec_scheduler = get_scheduler(self.dec_opt, hyperparameters)
-        self.cla_scheduler = get_scheduler(self.cla_opt, hyperparameters)
+        self.cla_digit_scheduler = get_scheduler(self.cla_digit_opt, hyperparameters)
+        self.cla_domain_scheduler = get_scheduler(self.cla_domain_opt, hyperparameters)
 
         # Network weight initialization
         self.apply(weights_init(hyperparameters['init']))
         self.dis_a.apply(weights_init('gaussian'))
         self.dis_b.apply(weights_init('gaussian'))
 
-        self.content_classifier.apply(weights_init('gaussian'))
+        self.content_digit_classifier.apply(weights_init('gaussian'))
 
         # Load VGG model if needed
         if 'vgg_w' in hyperparameters.keys() and hyperparameters['vgg_w'] > 0:
@@ -196,14 +201,14 @@ class MUNIT_Trainer(nn.Module):
         # label_predict_c_a = self.content_classifier(c_a)
         # label_predict_c_a_recon = self.content_classifier(c_a_recon)
         c_a_limited, _ = self.gen_a.encode(x_a_limited)
-        label_predict_c_a_limited = self.content_classifier(c_a_limited)
+        label_predict_c_a_limited = self.content_digit_classifier(c_a_limited)
 
-        label_predict_c_b = self.content_classifier(c_b)
-        label_predict_c_b_recon = self.content_classifier(c_b_recon)
+        label_predict_c_b = self.content_digit_classifier(c_b)
+        label_predict_c_b_recon = self.content_digit_classifier(c_b_recon)
 
         x_ab_limited = self.gen_b.decode(c_a_limited, s_b)
         c_a_recon_limited, _ = self.gen_b.encode(x_ab_limited)
-        label_predict_c_a_recon_limited = self.content_classifier(c_a_recon_limited)
+        label_predict_c_a_recon_limited = self.content_digit_classifier(c_a_recon_limited)
 
         ### loss content prediction a
         loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a_limited, label_a_limited)
@@ -215,8 +220,8 @@ class MUNIT_Trainer(nn.Module):
         loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
 
         ### consistency of content prediction
-        label_predict_c_a_unlabeled = self.content_classifier(c_a)
-        label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_recon)
+        label_predict_c_a_unlabeled = self.content_digit_classifier(c_a)
+        label_predict_c_a_unlabeled_recon = self.content_digit_classifier(c_a_recon)
         loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
             label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
         loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
@@ -309,13 +314,13 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_a, x_a_recon, x_ab1, x_ab2, x_b, x_b_recon, x_ba1, x_ba2
 
-    def cla_update(self, x_a_unlabeled, sample_a_limited, sample_b):
+    def cla_digit_update(self, x_a_unlabeled, sample_a_limited, sample_b):
         x_a_limited, label_a_limited = sample_a_limited
         x_b, label_b = sample_b
         # print('cla_update')
         # print(x_a.device())
         # exit()
-        self.cla_opt.zero_grad()
+        self.cla_digit_opt.zero_grad()
         s_a = Variable(torch.randn(x_a_limited.size(0), self.style_dim, 1, 1).cuda())
         s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
         # encode
@@ -334,10 +339,10 @@ class MUNIT_Trainer(nn.Module):
         c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
         c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
 
-        label_predict_c_a = self.content_classifier(c_a)
-        label_predict_c_a_recon = self.content_classifier(c_a_recon)
-        label_predict_c_b = self.content_classifier(c_b)
-        label_predict_c_b_recon = self.content_classifier(c_b_recon)
+        label_predict_c_a = self.content_digit_classifier(c_a)
+        label_predict_c_a_recon = self.content_digit_classifier(c_a_recon)
+        label_predict_c_b = self.content_digit_classifier(c_b)
+        label_predict_c_b_recon = self.content_digit_classifier(c_b_recon)
 
         ### extract x_a_unlabeled
         c_a_unlabeled, s_a_unlabeled = self.gen_a.encode(x_a_unlabeled)
@@ -345,28 +350,79 @@ class MUNIT_Trainer(nn.Module):
         c_a_unlabeled_recon, _ = self.gen_a.encode(x_a_unlabeled_recon)
 
         ### consistency of content-label prediction on unlabeled samples from target domain
-        label_predict_c_a_unlabeled = self.content_classifier(c_a_unlabeled)
-        label_predict_c_a_unlabeled_recon = self.content_classifier(c_a_unlabeled_recon)
-        self.loss_content_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+        label_predict_c_a_unlabeled = self.content_digit_classifier(c_a_unlabeled)
+        label_predict_c_a_unlabeled_recon = self.content_digit_classifier(c_a_unlabeled_recon)
+        self.loss_content_digit_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
             label_predict_c_a_unlabeled, label_predict_c_a_unlabeled_recon)
 
         ### content prediction loss on labeled samples (and their reconstructed samples) from target domain
-        self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a_limited)
-        self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon,
-                                                                                      label_a_limited)
+        self.loss_content_digit_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a_limited)
+        self.loss_content_digit_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon,
+                                                                                            label_a_limited)
 
         ### the 3 losses above on samples from source domain which are all labeled
-        self.loss_content_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
-        self.loss_content_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
-        self.loss_content_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+        self.loss_content_digit_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        self.loss_content_digit_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        self.loss_content_digit_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
             label_predict_c_b_recon, label_predict_c_b)
 
-        self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
-                              self.loss_content_classifier_c_b + self.loss_content_classifier_c_b_recon + \
-                              self.loss_content_classifier_c_a_and_c_a_recon + \
-                              self.loss_content_classifier_c_b_and_c_b_recon
-        self.loss_cla_total.backward()
-        self.cla_opt.step()
+        self.loss_cla_digit_total = self.loss_content_digit_classifier_c_a + self.loss_content_digit_classifier_c_a_recon + \
+                                    self.loss_content_digit_classifier_c_b + self.loss_content_digit_classifier_c_b_recon + \
+                                    self.loss_content_digit_classifier_c_a_and_c_a_recon + \
+                                    self.loss_content_digit_classifier_c_b_and_c_b_recon
+        self.loss_cla_digit_total.backward()
+        self.cla_digit_opt.step()
+
+    def cla_domain_update(self, x_a, x_b):
+        label_a = Variable(torch.zeros(x_a.size(0)).long().cuda())
+        label_b = Variable(torch.ones(x_b.size(0)).long().cuda())
+        # x_a_limited, label_a_limited = sample_a_limited
+        # x_b, label_b = sample_b
+        # print('cla_update')
+        # print(x_a.device())
+        # exit()
+        self.cla_domain_opt.zero_grad()
+        s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+        # encode
+        c_a, s_a_prime = self.gen_a.encode(x_a)
+        c_b, s_b_prime = self.gen_b.encode(x_b)
+        # print("c_a")
+        # print(c_a.size())
+        # exit()
+        # decode (within domain)
+        # x_a_recon = self.gen_a.decode(c_a, s_a_prime)
+        # x_b_recon = self.gen_b.decode(c_b, s_b_prime)
+        # decode (cross domain)
+        x_ba = self.gen_a.decode(c_b, s_a)
+        x_ab = self.gen_b.decode(c_a, s_b)
+        # encode again
+        c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
+        c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
+
+        label_predict_c_a = self.content_domain_classifier(c_a)
+        label_predict_c_a_recon = self.content_domain_classifier(c_a_recon)
+        label_predict_c_b = self.content_domain_classifier(c_b)
+        label_predict_c_b_recon = self.content_domain_classifier(c_b_recon)
+
+        ### content prediction loss on a (and their reconstructed samples) from target domain
+        self.loss_content_domain_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
+        self.loss_content_domain_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
+        self.loss_content_domain_classifier_c_a_and_c_a_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_c_a_recon, label_predict_c_a)
+
+        ### the 3 losses above on samples from source domain which are all labeled
+        self.loss_content_domain_classifier_c_b = self.compute_content_classifier_loss(label_predict_c_b, label_b)
+        self.loss_content_domain_classifier_c_b_recon = self.compute_content_classifier_loss(label_predict_c_b_recon, label_b)
+        self.loss_content_domain_classifier_c_b_and_c_b_recon = self.compute_content_classifier_two_predictions_loss(
+            label_predict_c_b_recon, label_predict_c_b)
+
+        self.loss_cla_domain_total = self.loss_content_domain_classifier_c_a + self.loss_content_domain_classifier_c_a_recon + \
+                                    self.loss_content_domain_classifier_c_b + self.loss_content_domain_classifier_c_b_recon + \
+                                    self.loss_content_domain_classifier_c_a_and_c_a_recon + \
+                                    self.loss_content_domain_classifier_c_b_and_c_b_recon
+        self.loss_cla_domain_total.backward()
+        self.cla_domain_opt.step()
 
     def cla_inference(self, test_loader_a, test_loader_b):
         accu_content_classifier_c_a = []
@@ -396,10 +452,10 @@ class MUNIT_Trainer(nn.Module):
             c_b_recon, s_a_recon = self.gen_a.encode(x_ba)
             c_a_recon, s_b_recon = self.gen_b.encode(x_ab)
 
-            label_predict_c_a = self.content_classifier(c_a)
-            label_predict_c_a_recon = self.content_classifier(c_a_recon)
-            label_predict_c_b = self.content_classifier(c_b)
-            label_predict_c_b_recon = self.content_classifier(c_b_recon)
+            label_predict_c_a = self.content_digit_classifier(c_a)
+            label_predict_c_a_recon = self.content_digit_classifier(c_a_recon)
+            label_predict_c_b = self.content_digit_classifier(c_b)
+            label_predict_c_b_recon = self.content_digit_classifier(c_b_recon)
 
             # self.loss_content_classifier_c_a = self.compute_content_classifier_loss(label_predict_c_a, label_a)
             # self.loss_content_classifier_c_a_recon = self.compute_content_classifier_loss(label_predict_c_a_recon, label_a)
@@ -575,19 +631,20 @@ class MUNIT_Trainer(nn.Module):
         # Load content classifier
         last_model_name = get_model_list(checkpoint_dir, "con_cla")
         state_dict = torch.load(last_model_name)
-        self.content_classifier.load_state_dict(state_dict['con_cla'])
+        self.content_digit_classifier.load_state_dict(state_dict['con_cla'])
         # Load optimizers
         state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
         self.dis_opt.load_state_dict(state_dict['dis'])
         self.gen_opt.load_state_dict(state_dict['gen'])
-        self.cla_opt.load_state_dict(state_dict['con_cla'])
+        self.cla_digit_opt.load_state_dict(state_dict['con_cla'])
         # Reinitilize schedulers
         self.dis_scheduler = get_scheduler(self.dis_opt, hyperparameters, iterations)
         self.gen_scheduler = get_scheduler(self.gen_opt, hyperparameters, iterations)
         self.enc_style_scheduler = get_scheduler(self.enc_style_opt, hyperparameters, iterations)
         self.enc_content_scheduler = get_scheduler(self.enc_content_opt, hyperparameters, iterations)
         self.dec_scheduler = get_scheduler(self.dec_opt, hyperparameters, iterations)
-        self.cla_scheduler = get_scheduler(self.cla_opt, hyperparameters, iterations)
+        self.cla_digit_scheduler = get_scheduler(self.cla_digit_opt, hyperparameters, iterations)
+        self.cla_domain_scheduler = get_scheduler(self.cla_domain_opt, hyperparameters, iterations)
         print('Resume from iteration %d' % iterations)
         return iterations
 
@@ -600,7 +657,7 @@ class MUNIT_Trainer(nn.Module):
 
         torch.save({'a': self.gen_a.state_dict(), 'b': self.gen_b.state_dict()}, gen_name)
         torch.save({'a': self.dis_a.state_dict(), 'b': self.dis_b.state_dict()}, dis_name)
-        torch.save({'con_cla': self.content_classifier.state_dict()}, con_cla_name)
+        torch.save({'con_cla': self.content_digit_classifier.state_dict()}, con_cla_name)
         torch.save({'gen': self.gen_opt.state_dict(),
                     'dis': self.dis_opt.state_dict(),
-                    'con_cla': self.cla_opt.state_dict()}, opt_name)
+                    'con_cla': self.cla_digit_opt.state_dict()}, opt_name)

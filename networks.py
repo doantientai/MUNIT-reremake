@@ -17,7 +17,7 @@ except ImportError: # will be 3.x series
 # Discriminator
 ##################################################################################
 
-class ContentClassifier(nn.Module):
+class ContentDigitClassifier(nn.Module):
     # Classifier which is built for classifying on the content space
     def __init__(self, input_dim, params):
         super().__init__()
@@ -48,7 +48,36 @@ class ContentClassifier(nn.Module):
         result = self.cnn(x)
         return result
 
+class ContentDomainClassifier(nn.Module):
+    # Classifier which is built for classifying on the content space
+    def __init__(self, input_dim, params):
+        super().__init__()
+        self.n_layers = 2
+        self.n_classes = 2
+        self.dim = input_dim
+        self.cnn = self._make_cnn()
 
+    class Flatten(nn.Module):
+        def forward(self, input):
+            return input.view(input.size(0), -1)
+
+    def _make_cnn(self):
+        dim = self.dim
+        for i in range(self.n_layers - 1):
+            dim *= 2
+        cnn = []
+        cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn += [self.Flatten()]
+        # cnn += [nn.Linear(1*16*16, self.n_classes)]
+        # cnn += [nn.Linear(1024, self.n_classes)]  #
+        cnn += [nn.Linear(256, self.n_classes)]  #
+        cnn += [nn.Softmax()]
+        cnn = nn.Sequential(*cnn)
+        return cnn
+
+    def forward(self, x):
+        result = self.cnn(x)
+        return result
 
 class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture

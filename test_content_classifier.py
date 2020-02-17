@@ -61,7 +61,7 @@ state_dict_gen = torch.load(opts.checkpoint_gen)
 trainer.gen_a.load_state_dict(state_dict_gen['a'])
 
 state_dict_con_cla = torch.load(opts.checkpoint_con_cla)
-trainer.content_classifier.load_state_dict(state_dict_con_cla['con_cla'])
+trainer.content_digit_classifier.load_state_dict(state_dict_con_cla['con_cla'])
 
 # trainer.gen_b.load_state_dict(state_dict_gen['b'])
 # except:
@@ -87,7 +87,7 @@ for it_inf, samples_a_test in enumerate(test_loader_a):
     c_a, s_a_prime = trainer.gen_a.encode(x_a)
     # c_b, s_b_prime = trainer.gen_b.encode(x_b)
 
-    label_predict_c_a = trainer.content_classifier(c_a)
+    label_predict_c_a = trainer.content_digit_classifier(c_a)
     # label_predict_c_b = trainer.content_classifier(c_b)
 
     batch_accuracy = trainer.compute_content_classifier_accuracy(label_predict_c_a, label_a, custom_batch_size_val=config['batch_size_val']) * 100.0
