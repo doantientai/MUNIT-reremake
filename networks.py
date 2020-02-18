@@ -80,18 +80,18 @@ class MsImageDis(nn.Module):
 
         # self.dis_branch_Q = self._make_branch_q()
         # self.conv_disc = nn.Conv2d(128, 10, 1)
-        self.num_con_c = params['num_con_c']
-        self.conv_mu_Q = nn.Conv2d(128, self.num_con_c, 1)
-        self.conv_var_Q = nn.Conv2d(128, self.num_con_c, 1)
+        # self.num_con_c = params['num_con_c']
+        # self.conv_mu_Q = nn.Conv2d(128, self.num_con_c, 1)
+        # self.conv_var_Q = nn.Conv2d(128, self.num_con_c, 1)
 
         ### bring back multi-scale
         self.dis_roots = nn.ModuleList()
         self.dis_branch_Ds = nn.ModuleList()
-        self.dis_branch_Qs = nn.ModuleList()
+        # self.dis_branch_Qs = nn.ModuleList()
         for _ in range(self.num_scales):
             self.dis_roots.append(self._make_dis_root())
             self.dis_branch_Ds.append(self._make_branch_d())
-            self.dis_branch_Qs.append(self._make_branch_q())
+            # self.dis_branch_Qs.append(self._make_branch_q())
 
     def _make_branch_d(self):
         dim = self.dim
@@ -102,15 +102,15 @@ class MsImageDis(nn.Module):
         cnn = nn.Sequential(*cnn)
         return cnn
 
-    def _make_branch_q(self):
-        dim = self.dim
-        for i in range(self.n_layer - 1):
-            dim *= 2
-        cnn = []
-        cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
-        cnn += [Conv2dBlock(dim, 128, 2, 1, norm='bn', activation=self.activ, pad_type=self.pad_type)]
-        cnn = nn.Sequential(*cnn)
-        return cnn
+    # def _make_branch_q(self):
+    #     dim = self.dim
+    #     for i in range(self.n_layer - 1):
+    #         dim *= 2
+    #     cnn = []
+    #     cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
+    #     cnn += [Conv2dBlock(dim, 128, 2, 1, norm='bn', activation=self.activ, pad_type=self.pad_type)]
+    #     cnn = nn.Sequential(*cnn)
+    #     return cnn
 
     def _make_dis_root(self):
         dim = self.dim
@@ -132,10 +132,10 @@ class MsImageDis(nn.Module):
             output_root = self.dis_roots[i](x)
             # output_root = self.downsample(output_root)
             output_d = self.dis_branch_Ds[i](output_root)
-            output_q = self.dis_branch_Qs[i](output_root)
+            # output_q = self.dis_branch_Qs[i](output_root)
 
-            mu = self.conv_mu_Q(output_q).squeeze()
-            var = torch.exp(self.conv_var_Q(output_q).squeeze())
+            # mu = self.conv_mu_Q(output_q).squeeze()
+            # var = torch.exp(self.conv_var_Q(output_q).squeeze())
 
             # print(mu.size())
             # print(var.size())
@@ -143,8 +143,8 @@ class MsImageDis(nn.Module):
 
             output_wrap = {
                 "output_d": output_d,
-                "mu": mu,
-                "var": var
+                # "mu": mu,
+                # "var": var
             }
 
             outputs.append(output_wrap)
