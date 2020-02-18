@@ -49,7 +49,6 @@ class ContentClassifier(nn.Module):
         return result
 
 
-
 class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture
     def __init__(self, input_dim, params):
@@ -151,95 +150,29 @@ class MsImageDis(nn.Module):
             outputs.append(output_wrap)
         return outputs
 
-    # def forward(self, x):
-        # dim = self.dim
-        # cnn_x = []
-        # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
-        # for i in range(self.n_layer - 1):
-        #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
-        #     dim *= 2
-        # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
-        # cnn_x = nn.Sequential(*cnn_x)
-        # outputs = []
-        # output_root = self.dis_root(x)
-        # output_root = self.downsample(output_root)
-        #
-        # output_d = self.dis_branch_D(output_root)
-        #
-        # output_q = self.dis_branch_Q(output_root)
-        # mu = self.conv_mu_Q(output_q).squeeze()
-        # var = torch.exp(self.conv_var_Q(output_q).squeeze())
-        #
-        # output_wrap = {
-        #     "output_d": output_d,
-        #     "mu": mu,
-        #     "var": var
-        # }
-        #
-        # outputs.append(output_wrap)
 
-        # summary(self.dis_root, x.cpu().size()[1:], batch_size=x.cpu().size()[0])
-        # dot = make_dot(output_root, params=dict(self.dis_root.named_parameters()))
-        # dot.format = 'svg'
-        # dot.render('dis_root')
-        #
-        # summary(self.dis_branch_D, output_root.cpu().size()[1:], batch_size=output_root.cpu().size()[0])
-        # dot2 = make_dot(output, params=dict(self.dis_branch_D.named_parameters()))
-        # dot2.format = 'svg'
-        # dot2.render('dis_branch_D')
-        #
-        # exit()
+class ContentDis(nn.Module):
+    # Classifier which is built for classifying on the content space
+    def __init__(self, input_dim, params):
+        super().__init__()
+        self.n_layers = 2
+        self.dim = input_dim
+        self.cnn = self._make_cnn()
+        self.gan_type = params['gan_type']
 
-        # return outputs
+    def _make_cnn(self):
+        dim = self.dim
+        for i in range(self.n_layers - 1):
+            dim *= 2
+        cnn = []
+        cnn += [nn.Conv2d(dim, 1, 1, 1, 0)]
+        cnn = nn.Sequential(*cnn)
+        return cnn
 
-    # def forward(self, x):
-    #     outputs = []
-    #     print('self.cnns')
-    #     for model in self.cnns:
-    #         # print(model)
-    #         # print(x.cpu().size()[0])
-    #         # exit()
-    #         # summary(model, x.cpu().size()[1:], batch_size=x.cpu().size()[0])
-    #         # output_temp = model(x)
-    #         # dot = make_dot(output_temp, params=dict(model.named_parameters()))
-    #         # dot.format = 'svg'
-    #         # dot.render('dot')
-    #         # exit()
-    #         outputs.append(model(x))
-    #         x = self.downsample(x)
-    #     return outputs
+    def forward(self, x):
+        result = self.cnn(x)
+        return result
 
-    # def calc_dis_loss(self, input_fake, input_real):
-    #     # calculate the loss to train D
-    #     outs0 = self.forward(input_fake)
-    #     outs1 = self.forward(input_real)
-    #     loss = 0
-    #
-    #     for it, (out0, out1) in enumerate(zip(outs0, outs1)):
-    #         if self.gan_type == 'lsgan':
-    #             loss += torch.mean((out0 - 0)**2) + torch.mean((out1 - 1)**2)
-    #         elif self.gan_type == 'nsgan':
-    #             all0 = Variable(torch.zeros_like(out0.data).cuda(), requires_grad=False)
-    #             all1 = Variable(torch.ones_like(out1.data).cuda(), requires_grad=False)
-    #             loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out0), all0) +
-    #                                F.binary_cross_entropy(F.sigmoid(out1), all1))
-    #         else:
-    #             assert 0, "Unsupported GAN type: {}".format(self.gan_type)
-    #     return loss
-
-    # def calc_gen_loss(self, input_fake):
-    #     # calculate the loss to train G
-    #     outs0 = self.forward(input_fake)
-    #     loss = 0
-    #     for it, (out0) in enumerate(outs0):
-    #         if self.gan_type == 'lsgan':
-    #             loss += torch.mean((out0 - 1)**2) # LSGAN
-    #         elif self.gan_type == 'nsgan':
-    #             all1 = Variable(torch.ones_like(out0.data).cuda(), requires_grad=False)
-    #             loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out0), all1))
-    #         else:
-    #             assert 0, "Unsupported GAN type: {}".format(self.gan_type)
-    #     return loss
 
 ##################################################################################
 # Generator
