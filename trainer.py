@@ -621,6 +621,10 @@ class MUNIT_Trainer(nn.Module):
             self.enc_style_scheduler.step()
         if self.enc_content_scheduler is not None:
             self.enc_content_scheduler.step()
+        if self.cla_scheduler is not None:
+            self.cla_scheduler.step()
+        if self.cont_dis_scheduler is not None:
+            self.cont_dis_scheduler.step()
         # if self.dec_scheduler is not None:
         #     self.dec_scheduler.step()
 

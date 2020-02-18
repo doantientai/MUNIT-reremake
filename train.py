@@ -139,7 +139,6 @@ while True:
             # HTML
             # write_html(output_directory + "/index.html", iterations + 1, config['image_save_iter'], 'images')
 
-
         if (iterations + 1) % config['image_display_iter'] == 0:
             with torch.no_grad():
                 image_outputs = trainer.sample(train_display_images_a, train_display_images_b)
