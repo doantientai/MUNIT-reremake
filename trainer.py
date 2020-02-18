@@ -412,9 +412,8 @@ class MUNIT_Trainer(nn.Module):
         self.cont_dis_opt.step()
 
 
-
-
     def cla_inference(self, test_loader_a, test_loader_b):
+        self.eval()
         accu_content_classifier_c_a = []
         accu_content_classifier_c_a_recon = []
         accu_content_classifier_c_b = []
@@ -474,6 +473,7 @@ class MUNIT_Trainer(nn.Module):
             self.accu_content_classifier_c_b,
             self.accu_content_classifier_c_b_recon
         ])
+        self.train()
 
         # self.loss_cla_total = self.loss_content_classifier_c_a + self.loss_content_classifier_c_a_recon + \
         #                       self.loss_content_classifier_b + self.loss_content_classifier_c_b_recon + \
