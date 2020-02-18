@@ -640,6 +640,10 @@ class MUNIT_Trainer(nn.Module):
         last_model_name = get_model_list(checkpoint_dir, "con_cla")
         state_dict = torch.load(last_model_name)
         self.content_classifier.load_state_dict(state_dict['con_cla'])
+        # Load content discriminator
+        last_model_name = get_model_list(checkpoint_dir, "con_dis")
+        state_dict = torch.load(last_model_name)
+        self.content_dis.load_state_dict(state_dict['con_dis'])
         # Load optimizers
         state_dict = torch.load(os.path.join(checkpoint_dir, 'optimizer.pt'))
         self.dis_opt.load_state_dict(state_dict['dis'])
@@ -661,11 +665,29 @@ class MUNIT_Trainer(nn.Module):
         gen_name = os.path.join(snapshot_dir, 'gen_%08d.pt' % (iterations + 1))
         dis_name = os.path.join(snapshot_dir, 'dis_%08d.pt' % (iterations + 1))
         con_cla_name = os.path.join(snapshot_dir, 'con_cla_%08d.pt' % (iterations + 1))
+        con_dis_name = os.path.join(snapshot_dir, 'con_dis_%08d.pt' % (iterations + 1))
         opt_name = os.path.join(snapshot_dir, 'optimizer.pt')
+
+        self.gen_a.cpu()
+        self.gen_b.cpu()
+        self.dis_a.cpu()
+        self.dis_b.cpu()
+        self.content_classifier.cpu()
+        self.content_dis.cpu()
 
         torch.save({'a': self.gen_a.state_dict(), 'b': self.gen_b.state_dict()}, gen_name)
         torch.save({'a': self.dis_a.state_dict(), 'b': self.dis_b.state_dict()}, dis_name)
         torch.save({'con_cla': self.content_classifier.state_dict()}, con_cla_name)
+        torch.save({'con_dis': self.content_dis.state_dict()}, con_dis_name)
         torch.save({'gen': self.gen_opt.state_dict(),
                     'dis': self.dis_opt.state_dict(),
-                    'con_cla': self.cla_opt.state_dict()}, opt_name)
+                    'con_cla': self.cla_opt.state_dict(),
+                    'con_dis': self.cont_dis_opt.state_dict()},
+                   opt_name)
+
+        self.gen_a.cuda()
+        self.gen_b.cuda()
+        self.dis_a.cuda()
+        self.dis_b.cuda()
+        self.content_classifier.cuda()
+        self.content_dis.cuda()
