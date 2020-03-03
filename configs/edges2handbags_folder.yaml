@@ -6,11 +6,11 @@ image_save_iter: 10000        # How often do you want to save output images duri
 image_display_iter: 500       # How often do you want to display output images during training
 display_size: 16              # How many images do you want to display each time
 snapshot_save_iter: 10000     # How often do you want to save trained models
-log_iter: 10                  # How often do you want to log the training stats
+log_iter: 100                  # How often do you want to log the training stats
 
 # optimization options
 max_iter: 1000000             # maximum number of training iterations
-batch_size: 1                 # batch size
+batch_size: 2                 # batch size
 weight_decay: 0.0001          # weight decay
 beta1: 0.5                    # Adam parameter
 beta2: 0.999                  # Adam parameter
@@ -39,7 +39,8 @@ dis:
   dim: 64                     # number of filters in the bottommost layer
   norm: none                  # normalization layer [none/bn/in/ln]
   activ: lrelu                # activation function [relu/lrelu/prelu/selu/tanh]
-  n_layer: 4                  # number of layers in D
+#  n_layer: 4                  # number of layers in D
+  n_layer: 6                  # number of layers in D (we have to plus 2 because the branches size is fixed)
   gan_type: lsgan             # GAN loss [lsgan/nsgan]
   num_scales: 3               # number of scales
   pad_type: reflect           # padding type [zero/reflect]
