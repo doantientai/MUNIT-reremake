@@ -2,7 +2,7 @@
 rm datasets/edges2handbags -rf
 mkdir datasets/edges2handbags -p
 axel -n 1 https://people.eecs.berkeley.edu/~tinghuiz/projects/pix2pix/datasets/edges2handbags.tar.gz --output=datasets/edges2handbags/edges2handbags.tar.gz
-tar -zxvf datasets/edges2handbags/edges2handbags.tar.gz -C datasets/
+tar -xvf datasets/edges2handbags/edges2handbags.tar.gz -C datasets/
 mkdir datasets/edges2handbags/train1 -p
 mkdir datasets/edges2handbags/train0 -p
 mkdir datasets/edges2handbags/test1 -p
@@ -13,5 +13,5 @@ mv datasets/edges2handbags/train0 datasets/edges2handbags/trainA
 mv datasets/edges2handbags/train1 datasets/edges2handbags/trainB
 mv datasets/edges2handbags/test0 datasets/edges2handbags/testA
 mv datasets/edges2handbags/test1 datasets/edges2handbags/testB
-python train.py --config configs/edges2handbags_folder.yaml
+#python train.py --config configs/edges2handbags_folder.yaml
 
