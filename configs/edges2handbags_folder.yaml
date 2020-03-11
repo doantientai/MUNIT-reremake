@@ -10,7 +10,7 @@ log_iter: 100                  # How often do you want to log the training stats
 
 # optimization options
 max_iter: 1000000             # maximum number of training iterations
-batch_size: 2                 # batch size
+batch_size: 10                 # batch size
 weight_decay: 0.0001          # weight decay
 beta1: 0.5                    # Adam parameter
 beta2: 0.999                  # Adam parameter
@@ -40,7 +40,7 @@ dis:
   norm: none                  # normalization layer [none/bn/in/ln]
   activ: lrelu                # activation function [relu/lrelu/prelu/selu/tanh]
 #  n_layer: 4                  # number of layers in D
-  n_layer: 6                  # number of layers in D (we have to plus 2 because the branches size is fixed)
+  n_layer: 4                  # number of layers in D for image size 64x64
   gan_type: lsgan             # GAN loss [lsgan/nsgan]
   num_scales: 3               # number of scales
   pad_type: reflect           # padding type [zero/reflect]
@@ -49,8 +49,11 @@ dis:
 input_dim_a: 3                              # number of image channels [1/3]
 input_dim_b: 3                              # number of image channels [1/3]
 num_workers: 8                              # number of data loading threads
-new_size: 256                               # first resize the shortest image side to this size
-crop_image_height: 256                      # random crop image of this height
-crop_image_width: 256                       # random crop image of this width
+new_size: 64                               # first resize the shortest image side to this size
+crop_image_height: 64                      # random crop image of this height
+crop_image_width: 64                       # random crop image of this width
+#new_size: 256                               # first resize the shortest image side to this size
+#crop_image_height: 256                      # random crop image of this height
+#crop_image_width: 256                       # random crop image of this width
 data_root: ./datasets/edges2handbags/     # dataset folder location
 #data_root: /home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags     # dataset folder location
