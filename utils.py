@@ -8,6 +8,7 @@ from networks import Vgg16
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
 from torchvision import transforms
+from torchvision import models
 from data import ImageFilelist, ImageFolder
 import torch
 import torch.nn as nn
@@ -236,7 +237,7 @@ def load_vgg16(model_dir):
 
 def load_inception(model_path):
     state_dict = torch.load(model_path)
-    model = inception_v3(pretrained=False, transform_input=True)
+    model = models.inception_v3(pretrained=False, transform_input=True)
     model.aux_logits = False
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, state_dict['fc.weight'].size(0))

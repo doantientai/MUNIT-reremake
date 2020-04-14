@@ -4,7 +4,7 @@ Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses
 """
 from __future__ import print_function
 from utils import get_config, get_data_loader_folder, pytorch03_to_pytorch04, load_inception
-from trainer import MUNIT_Trainer, UNIT_Trainer
+from trainer import MUNIT_Trainer
 from torch import nn
 from scipy.stats import entropy
 import torch.nn.functional as F
@@ -23,21 +23,77 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default='configs/edges2handbags_folder', help='Path to the config file.')
-parser.add_argument('--input_folder', type=str, help="input image folder")
-parser.add_argument('--output_folder', type=str, help="output image folder")
-parser.add_argument('--checkpoint', type=str, help="checkpoint of autoencoders")
-parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--config', type=str, default='configs/edges2handbags_folder', help='Path to the config file.')
+# parser.add_argument('--input_folder', type=str, help="input image folder")
+# parser.add_argument('--output_folder', type=str, help="output image folder")
+# parser.add_argument('--checkpoint', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--seed', type=int, default=1, help="random seed")
+# parser.add_argument('--num_style',type=int, default=10, help="number of styles to sample")
+# parser.add_argument('--synchronized', action='store_true', help="whether use synchronized style code or not")
+# parser.add_argument('--output_only', action='store_true', help="whether only save the output images or also save the input images")
+# parser.add_argument('--output_path', type=str, default='.', help="path for logs, checkpoints, and VGG model weight")
+# parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
+# parser.add_argument('--compute_IS', action='store_true', help="whether to compute Inception Score or not")
+# parser.add_argument('--compute_CIS', action='store_true', help="whether to compute Conditional Inception Score or not")
+# parser.add_argument('--inception_a', type=str, default='.', help="path to the pretrained inception network for domain A")
+# parser.add_argument('--inception_b', type=str, default='.', help="path to the pretrained inception network for domain B")
+
+##################### Test batch for workshop version: following paper https://arxiv.org/pdf/1804.04732.pdf #####################
+parser.add_argument('--config', type=str, default='configs/edges2handbags_folder.yaml', help='Path to the config file.')
 parser.add_argument('--seed', type=int, default=1, help="random seed")
-parser.add_argument('--num_style',type=int, default=10, help="number of styles to sample")
+parser.add_argument('--num_style',type=int, default=100, help="number of styles to sample")
 parser.add_argument('--synchronized', action='store_true', help="whether use synchronized style code or not")
-parser.add_argument('--output_only', action='store_true', help="whether only save the output images or also save the input images")
+parser.add_argument('--output_only', default=True, action='store_true', help="whether only save the output images or also save the input images")
 parser.add_argument('--output_path', type=str, default='.', help="path for logs, checkpoints, and VGG model weight")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
-parser.add_argument('--compute_IS', action='store_true', help="whether to compute Inception Score or not")
-parser.add_argument('--compute_CIS', action='store_true', help="whether to compute Conditional Inception Score or not")
-parser.add_argument('--inception_a', type=str, default='.', help="path to the pretrained inception network for domain A")
-parser.add_argument('--inception_b', type=str, default='.', help="path to the pretrained inception network for domain B")
+parser.add_argument('--compute_IS', default='true', help="whether to compute Inception Score or not")
+parser.add_argument('--compute_CIS', default='true', help="whether to compute Conditional Inception Score or not")
+parser.add_argument('--inception_a', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/inception_v3_google-1a9a5a14.pth', help="path to the pretrained inception network for domain A")
+parser.add_argument('--inception_b', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/inception_v3_google-1a9a5a14.pth', help="path to the pretrained inception network for domain B")
+LIMIT_INPUT = 100
+
+# ##### test batch for experience 006_MUNIT_origin_edge2shoe_64
+# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/006_MUNIT_origin_edge2shoe_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+#
+# # parser.add_argument('--input_folder', default='./datasets/edges2shoes/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/006_MUNIT_origin_edge2shoe_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='./datasets/edges2shoes/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/006_MUNIT_origin_edge2shoe_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+
+# ##### test batch for experience 005_MUNIT_origin_edge2bag_64
+# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/005_MUNIT_origin_edge2bag_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+#
+# parser.add_argument('--input_folder', default='./datasets/edges2handbags/testA', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/005_MUNIT_origin_edge2bag_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# # parser.add_argument('--input_folder', default='./datasets/edges2handbags/testB', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/005_MUNIT_origin_edge2bag_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+##### test batch for experience 004_edge2shoe_64
+parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/004_edge2shoe_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+
+# parser.add_argument('--input_folder', default='./datasets/edges2shoes/testA', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/004_edge2shoe_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+parser.add_argument('--input_folder', default='./datasets/edges2shoes/testB', type=str, help="input image folder")
+parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/004_edge2shoe_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+# ##### test batch for experience 003_edge2bag_64
+# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/003_edge2bag_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+#
+# # parser.add_argument('--input_folder', default='./datasets/edges2handbags/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/003_edge2bag_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='./datasets/edges2handbags/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/003_edge2bag_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
 
 opts = parser.parse_args()
 
@@ -50,8 +106,9 @@ config = get_config(opts.config)
 input_dim = config['input_dim_a'] if opts.a2b else config['input_dim_b']
 
 # Load the inception networks if we need to compute IS or CIIS
-if opts.compute_IS or opts.compute_IS:
+if opts.compute_IS or opts.compute_CIS:
     inception = load_inception(opts.inception_b) if opts.a2b else load_inception(opts.inception_a)
+    inception.cuda()
     # freeze the inception models and set eval mode
     inception.eval()
     for param in inception.parameters():
@@ -60,7 +117,7 @@ if opts.compute_IS or opts.compute_IS:
 
 # Setup model and data loader
 image_names = ImageFolder(opts.input_folder, transform=None, return_paths=True)
-data_loader = get_data_loader_folder(opts.input_folder, 1, False, new_size=config['new_size_a'], crop=False)
+data_loader = get_data_loader_folder(opts.input_folder, 1, False, new_size=config['new_size'], crop=False)
 
 config['vgg_model_path'] = opts.output_path
 if opts.trainer == 'MUNIT':
@@ -95,6 +152,8 @@ if opts.trainer == 'MUNIT':
     # Start testing
     style_fixed = Variable(torch.randn(opts.num_style, style_dim, 1, 1).cuda(), volatile=True)
     for i, (images, names) in enumerate(zip(data_loader, image_names)):
+        if i >= LIMIT_INPUT:
+            break
         if opts.compute_CIS:
             cur_preds = []
         print(names[1])
@@ -133,28 +192,35 @@ if opts.trainer == 'MUNIT':
             pyx = all_preds[j, :]
             IS.append(entropy(pyx, py))
 
+    output_text = ""
     if opts.compute_IS:
         print("Inception Score: {}".format(np.exp(np.mean(IS))))
+        output_text += ("Inception Score: {}".format(np.exp(np.mean(IS)))+"\n")
     if opts.compute_CIS:
         print("conditional Inception Score: {}".format(np.exp(np.mean(CIS))))
+        output_text += ("conditional Inception Score: {}".format(np.exp(np.mean(CIS)))+"\n")
 
-elif opts.trainer == 'UNIT':
-    # Start testing
-    for i, (images, names) in enumerate(zip(data_loader, image_names)):
-        print(names[1])
-        images = Variable(images.cuda(), volatile=True)
-        content, _ = encode(images)
+    if opts.compute_IS or opts.compute_CIS:
+        with open(os.path.join(opts.output_folder, "results.txt"), "w+") as fp:
+            fp.write(output_text)
 
-        outputs = decode(content)
-        outputs = (outputs + 1) / 2.
-        # path = os.path.join(opts.output_folder, 'input{:03d}_output{:03d}.jpg'.format(i, j))
-        basename = os.path.basename(names[1])
-        path = os.path.join(opts.output_folder,basename)
-        if not os.path.exists(os.path.dirname(path)):
-            os.makedirs(os.path.dirname(path))
-        vutils.save_image(outputs.data, path, padding=0, normalize=True)
-        if not opts.output_only:
-            # also save input images
-            vutils.save_image(images.data, os.path.join(opts.output_folder, 'input{:03d}.jpg'.format(i)), padding=0, normalize=True)
+# elif opts.trainer == 'UNIT':
+#     # Start testing
+#     for i, (images, names) in enumerate(zip(data_loader, image_names)):
+#         print(names[1])
+#         images = Variable(images.cuda(), volatile=True)
+#         content, _ = encode(images)
+#
+#         outputs = decode(content)
+#         outputs = (outputs + 1) / 2.
+#         # path = os.path.join(opts.output_folder, 'input{:03d}_output{:03d}.jpg'.format(i, j))
+#         basename = os.path.basename(names[1])
+#         path = os.path.join(opts.output_folder,basename)
+#         if not os.path.exists(os.path.dirname(path)):
+#             os.makedirs(os.path.dirname(path))
+#         vutils.save_image(outputs.data, path, padding=0, normalize=True)
+#         if not opts.output_only:
+#             # also save input images
+#             vutils.save_image(images.data, os.path.join(opts.output_folder, 'input{:03d}.jpg'.format(i)), padding=0, normalize=True)
 else:
     pass
