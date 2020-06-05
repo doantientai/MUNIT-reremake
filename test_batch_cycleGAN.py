@@ -56,7 +56,9 @@ parser.add_argument('--inception_b', type=str, default='/media/tai/6TB/Projects/
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/001_edge2shoe/test_latest/fakeB', type=str, help="input image folder")
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/001_edge2shoe/test_latest/fakeA', type=str, help="input image folder")
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/004_portrait/test_latest/fakeA', type=str, help="input image folder")
-parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/004_portrait/test_latest/fakeB', type=str, help="input image folder")
+# parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/004_portrait/test_latest/fakeB', type=str, help="input image folder")
+# parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/003_cat2dog/test_latest/fakeA', type=str, help="input image folder")
+parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/003_cat2dog/test_latest/fakeB', type=str, help="input image folder")
 opts = parser.parse_args()
 
 
