@@ -6,13 +6,13 @@ from os import listdir, makedirs
 from os.path import join
 import cv2
 
-DIR_IN = "/media/tai/6TB/Projects/InfoMUNIT/Data/ver_workshop/cityscapes/downloaded/val"
-DIR_OUT_A = "/media/tai/6TB/Projects/InfoMUNIT/Data/ver_workshop/cityscapes/split/testA"
-DIR_OUT_B = "/media/tai/6TB/Projects/InfoMUNIT/Data/ver_workshop/cityscapes/split/testB"
+# DIR_IN = "/media/tai/6TB/Projects/InfoMUNIT/Data/CityScapes/cityscapes/val"
+# DIR_OUT_A = "/media/tai/6TB/Projects/InfoMUNIT/Data/CityScapes/split/testA"
+# DIR_OUT_B = "/media/tai/6TB/Projects/InfoMUNIT/Data/CityScapes/split/testB"
 
-# DIR_IN = "/media/tai/6TB/Projects/InfoMUNIT/Data/ver_workshop/cityscapes/downloaded/train"
-# DIR_OUT_A = "/media/tai/6TB/Projects/InfoMUNIT/Data/ver_workshop/cityscapes/split/trainA"
-# DIR_OUT_B = "/media/tai/6TB/Projects/InfoMUNIT/Data/ver_workshop/cityscapes/split/trainB"
+DIR_IN = "/media/tai/6TB/Projects/InfoMUNIT/Data/CityScapes/cityscapes/train"
+DIR_OUT_A = "/media/tai/6TB/Projects/InfoMUNIT/Data/CityScapes/split/trainA"
+DIR_OUT_B = "/media/tai/6TB/Projects/InfoMUNIT/Data/CityScapes/split/trainB"
 SIZE_ONE_IMAGE = 256
 
 if __name__ == '__main__':
