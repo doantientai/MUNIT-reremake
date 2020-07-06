@@ -3,7 +3,7 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 from __future__ import print_function
-from utils import get_config, get_data_loader_folder, pytorch03_to_pytorch04, load_inception
+from utils import get_config, get_data_loader_folder_test_batch, pytorch03_to_pytorch04, load_inception
 from trainer import MUNIT_Trainer
 from torch import nn
 from scipy.stats import entropy
@@ -141,7 +141,7 @@ if opts.compute_IS or opts.compute_CIS:
 
 # Setup model and data loader
 image_names = ImageFolder(opts.input_folder, transform=None, return_paths=True)
-data_loader = get_data_loader_folder(opts.input_folder, 1, False, new_size=config['new_size'], crop=False)
+data_loader = get_data_loader_folder_test_batch(opts.input_folder, 1, False, new_size=config['new_size'], height=config['new_size'], width=config['new_size'], crop=True)
 
 config['vgg_model_path'] = opts.output_path
 if opts.trainer == 'MUNIT':
