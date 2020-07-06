@@ -3,7 +3,7 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 from __future__ import print_function
-from utils import get_config, get_data_loader_folder, pytorch03_to_pytorch04, load_inception
+from utils import get_config, get_data_loader_folder_test_batch, pytorch03_to_pytorch04, load_inception
 from trainer import MUNIT_Trainer
 from torch import nn
 from scipy.stats import entropy
@@ -51,48 +51,51 @@ parser.add_argument('--compute_IS', default='true', help="whether to compute Inc
 parser.add_argument('--compute_CIS', default='true', help="whether to compute Conditional Inception Score or not")
 parser.add_argument('--inception_a', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/inception_v3_google-1a9a5a14.pth', help="path to the pretrained inception network for domain A")
 parser.add_argument('--inception_b', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/inception_v3_google-1a9a5a14.pth', help="path to the pretrained inception network for domain B")
-LIMIT_INPUT = 100
+LIMIT_INPUT = 200
 
 # ##### test batch for experience 006_MUNIT_origin_edge2shoe_64
-# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/006_MUNIT_origin_edge2shoe_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
-#
-# # parser.add_argument('--input_folder', default='./datasets/edges2shoes/testA', type=str, help="input image folder")
-# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/006_MUNIT_origin_edge2shoe_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/006_MUNIT_origin_edge2shoe_64/outputs/edges2shoes_folder/checkpoints/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2shoes/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/006_MUNIT_origin_edge2shoe_64/tests/test_batch_200i/a2b/a2b/', type=str, help="output image folder")
 # # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
-# parser.add_argument('--input_folder', default='./datasets/edges2shoes/testB', type=str, help="input image folder")
-# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/006_MUNIT_origin_edge2shoe_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2shoes/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/006_MUNIT_origin_edge2shoe_64/tests/test_batch_200i/b2a/b2a/', type=str, help="output image folder")
 # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
 
 
 # ##### test batch for experience 005_MUNIT_origin_edge2bag_64
-# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/005_MUNIT_origin_edge2bag_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
-#
-# parser.add_argument('--input_folder', default='./datasets/edges2handbags/testA', type=str, help="input image folder")
-# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/005_MUNIT_origin_edge2bag_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
-# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
-# # parser.add_argument('--input_folder', default='./datasets/edges2handbags/testB', type=str, help="input image folder")
-# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/005_MUNIT_origin_edge2bag_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
-# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/005_MUNIT_origin_edge2bag_64/outputs/edges2handbags_folder/checkpoints/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/005_MUNIT_origin_edge2bag_64/tests/test_batch_200i/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/005_MUNIT_origin_edge2bag_64/tests/test_batch_200i/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
 
 # ##### test batch for experience 004_edge2shoe_64
-# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/004_edge2shoe_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders") 
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/004_edge2shoe_64/outputs/edges2shoes_folder/checkpoints/gen_00800000.pt', type=str, help="checkpoint of autoencoders") 
 
-# # parser.add_argument('--input_folder', default='./datasets/edges2shoes/testA', type=str, help="input image folder")
-# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/004_edge2shoe_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2shoes/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/004_edge2shoe_64/tests/test_batch_200i/a2b/a2b/', type=str, help="output image folder")
 # # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
-# parser.add_argument('--input_folder', default='./datasets/edges2shoes/testB', type=str, help="input image folder")
-# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/004_edge2shoe_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2shoes/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/004_edge2shoe_64/tests/test_batch_200i/b2a/b2a/', type=str, help="output image folder")
 # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
 
 # ##### test batch for experience 003_edge2bag_64
-# parser.add_argument('--checkpoint', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/003_edge2bag_64/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
-#
-# # parser.add_argument('--input_folder', default='./datasets/edges2handbags/testA', type=str, help="input image folder")
-# # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/003_edge2bag_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/003_edge2bag_64/outputs/edges2handbags_folder/checkpoints/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/003_edge2bag_64/tests/test_batch_200i/a2b/a2b/', type=str, help="output image folder")
 # # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
-# parser.add_argument('--input_folder', default='./datasets/edges2handbags/testB', type=str, help="input image folder")
-# parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/from_MegaDeep/003_edge2bag_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/003_edge2bag_64/tests/test_batch_200i/b2a/b2a/', type=str, help="output image folder")
 # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
 
 # ##### test batch for experience 016_MUNIT_origin_dog2catDRIT_64_cyc
 # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/016_MUNIT_origin_dog2catDRIT_64_cyc/outputs/dogs2catsDRIT_folder-cyc/checkpoints/gen_00300000.pt', type=str, help="checkpoint of autoencoders")
@@ -112,18 +115,6 @@ LIMIT_INPUT = 100
 # # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
 # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testB', type=str, help="input image folder")
 # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/017_MUNIT_origin_dog2cat_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
-# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
-
-##### test batch for experience 018_MUNIT_origin_dog2catDRIT_64
-# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00300000.pt', type=str, help="checkpoint of autoencoders")
-parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00400000.pt', type=str, help="checkpoint of autoencoders")
-
-
-parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testA', type=str, help="input image folder")
-parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_batch/a2b/a2b/', type=str, help="output image folder")
-parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
-# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testB', type=str, help="input image folder")
-# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
 # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
 
 # ##### test batch for experience 012_MUNIT_origin_cityscapes_64_cyc
@@ -150,6 +141,53 @@ parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1
 # parser.add_argument('--output_folder', default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/015_cityscapes_64_cyc/tests/test_batch/b2a/b2a/', type=str, help="output image folder")
 # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
 
+# ##### test batch for experience 018_MUNIT_origin_dog2catDRIT_64
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00300000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00400000.pt', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00500000.pt', type=str, help="checkpoint of autoencoders")
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_batch_500k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testB', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_batch_500k/b2a/b2a/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+# ##### test batch for experience 019_InfoMUNIT_dog2catDRIT_64
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/019_InfoMUNIT_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00300000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/019_InfoMUNIT_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00400000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/019_InfoMUNIT_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00500000.pt', type=str, help="checkpoint of autoencoders")
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/019_InfoMUNIT_dog2catDRIT_64/tests/test_batch_500k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/Dog2CatDRIT/cat2dog/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/019_InfoMUNIT_dog2catDRIT_64/tests/test_batch_300k/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+# ##### test batch for experience 020_MUNIT_portrait_64
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/020_MUNIT_portrait_64/outputs/portrait_folder/checkpoints/gen_00700000.pt', type=str, help="checkpoint of autoencoders")
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/portrait/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/020_MUNIT_portrait_64/tests/test_batch_700k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/portrait/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/020_MUNIT_portrait_64/tests/test_batch_700k/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+# ##### test batch for experience 022_InfoMUNIT_portrait_64
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/outputs/portrait_folder/checkpoints/gen_00300000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/outputs/portrait_folder/checkpoints/gen_00500000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/outputs/portrait_folder/checkpoints/gen_00700000.pt', type=str, help="checkpoint of autoencoders")
+
+
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/portrait/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/tests/test_batch_300k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/portrait/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/tests/test_batch_300k/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
 opts = parser.parse_args()
 
 
@@ -172,7 +210,7 @@ if opts.compute_IS or opts.compute_CIS:
 
 # Setup model and data loader
 image_names = ImageFolder(opts.input_folder, transform=None, return_paths=True)
-data_loader = get_data_loader_folder(opts.input_folder, 1, False, new_size=config['new_size'], crop=False)
+data_loader = get_data_loader_folder_test_batch(opts.input_folder, 1, False, new_size=config['new_size'], height=config['new_size'], width=config['new_size'], crop=True)
 
 config['vgg_model_path'] = opts.output_path
 if opts.trainer == 'MUNIT':
