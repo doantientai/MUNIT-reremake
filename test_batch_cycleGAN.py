@@ -48,17 +48,26 @@ parser.add_argument('--output_only', default=True, action='store_true', help="wh
 parser.add_argument('--output_path', type=str, default='.', help="path for logs, checkpoints, and VGG model weight")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 parser.add_argument('--compute_IS', default='true', help="whether to compute Inception Score or not")
-parser.add_argument('--compute_CIS', default='false', help="whether to compute Conditional Inception Score or not")
-parser.add_argument('--inception_a', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/inception_v3_google-1a9a5a14.pth', help="path to the pretrained inception network for domain A")
-parser.add_argument('--inception_b', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/inception_v3_google-1a9a5a14.pth', help="path to the pretrained inception network for domain B")
 
 # ##### test batch for experience 001_edge2shoe
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/001_edge2shoe/test_latest/fakeB', type=str, help="input image folder")
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/001_edge2shoe/test_latest/fakeA', type=str, help="input image folder")
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/004_portrait/test_latest/fakeA', type=str, help="input image folder")
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/004_portrait/test_latest/fakeB', type=str, help="input image folder")
+<<<<<<< HEAD
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/SOTAs/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/002_edge2bag/test_latest/fakeA', type=str, help="input image folder")
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/SOTAs/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/002_edge2bag/test_latest/fakeB', type=str, help="input image folder")
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/SOTAs/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/002_edge2bag/test_latest/fakeA', type=str, help="input image folder")
+
+### test output of MUNIT using script test_batch_cycleGAN
+parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_batch_300k/a2b/a2b/103', type=str, help="input image folder")
+
+
+
+=======
 # parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/003_cat2dog/test_latest/fakeA', type=str, help="input image folder")
 parser.add_argument('--input_folder', default='/media/tai/6TB/Projects/SOTAsDemos/CycleGAN/pytorch-CycleGAN-and-pix2pix/tests/003_cat2dog/test_latest/fakeB', type=str, help="input image folder")
+>>>>>>> 12c53beadf2b3897abfd3f20e98bde518baf2a28
 opts = parser.parse_args()
 
 
@@ -71,7 +80,7 @@ input_dim = 64
 
 # Load the inception networks if we need to compute IS or CIIS
 if opts.compute_IS or opts.compute_CIS:
-    inception = load_inception('/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/inception_v3_google-1a9a5a14.pth')
+    inception = load_inception('/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/inception_v3_google-1a9a5a14.pth')
     inception.cuda()
     # freeze the inception models and set eval mode
     inception.eval()
