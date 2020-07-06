@@ -199,7 +199,7 @@ with torch.no_grad():
             #                        loop=0)
             imgs_digits.append(get_concat_h_loop(output_pillows))
         final_frame = get_concat_v_loop(imgs_digits)
-        final_frame.save(os.path.join(opts.output_folder, file_name + '_all.jpg'), quality=100)
+        final_frame.save(os.path.join(opts.output_folder, file_name + '_info_combined.jpg'), quality=100)
 
 
 
