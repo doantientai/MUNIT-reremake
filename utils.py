@@ -3,7 +3,7 @@ Copyright (C) 2018 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-SA 4.0 license (https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).
 """
 from torch.utils.serialization import load_lua
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 from networks import Vgg16
 from torch.autograd import Variable
 from torch.optim import lr_scheduler
@@ -65,21 +65,20 @@ def get_all_data_loaders(conf):
                                              new_size_a, new_size_a, new_size_a, num_workers, True)
         test_loader_b = get_data_loader_folder(os.path.join(conf['data_root'], 'testB'), batch_size_val, False,
                                              new_size_b, new_size_b, new_size_b, num_workers, True)
-
-#         train_loader_a = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA/images.h5',
-#                                             batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
-#         train_loader_a_limited = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA_50/images.h5',
-#                                                     batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
-#         train_loader_b = get_data_loader_h5(
-#             '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainB/images.h5',
-#             batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
-#         test_loader_a = get_data_loader_h5(
-#             '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testA/images.h5',
-#             batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
-#         test_loader_b = get_data_loader_h5(
-#             '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testB/images.h5',
-#             batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
-#     # else:
+        # train_loader_a = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA/images.h5',
+        #                                     batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_a_limited = get_data_loader_h5('/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainA_50/images.h5',
+        #                                             batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # train_loader_b = get_data_loader_h5(
+        #     '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/trainB/images.h5',
+        #     batch_size, True, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # test_loader_a = get_data_loader_h5(
+        #     '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testA/images.h5',
+        #     batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
+        # test_loader_b = get_data_loader_h5(
+        #     '/media/tai/6TB/Projects/InfoMUNIT/Data/ForMUNIT_h5/mnist2svhn_w_labels/testB/images.h5',
+        #     batch_size, False, new_size_a, height, width, num_workers, True, flip_lf=False)
+    # else:
     #     train_loader_a = get_data_loader_list(conf['data_folder_train_a'], conf['data_list_train_a'], batch_size, True,
     #                                             new_size_a, height, width, num_workers, True)
     #     test_loader_a = get_data_loader_list(conf['data_folder_test_a'], conf['data_list_test_a'], batch_size, False,
@@ -90,6 +89,49 @@ def get_all_data_loaders(conf):
     #                                             new_size_b, new_size_b, new_size_b, num_workers, True)
     # return train_loader_a, train_loader_b, test_loader_a, test_loader_b
     return train_loader_a, train_loader_a_limited, train_loader_b, test_loader_a, test_loader_b
+
+
+def get_data_loader_for_testing_encoder(conf):
+    batch_size = 1
+    batch_size_val = conf['batch_size_val']
+    num_workers = conf['num_workers']
+    if 'new_size' in conf:
+        new_size_a = new_size_b = conf['new_size']
+    else:
+        new_size_a = conf['new_size_a']
+        new_size_b = conf['new_size_b']
+    height = conf['crop_image_height']
+    width = conf['crop_image_width']
+    assert 'data_root' in conf
+
+    ### get data loader folder
+
+    transform_list = [transforms.ToTensor(),
+                      transforms.Normalize((0.5, 0.5, 0.5),
+                                           (0.5, 0.5, 0.5))]
+    crop = True
+    transform_list = [transforms.RandomCrop((height, width))] + transform_list if crop else transform_list
+    transform_list = [transforms.Resize(new_size_a)] + transform_list if new_size_a is not None else transform_list
+
+    transform = transforms.Compose(transform_list)
+    dataset_a = ImageFolderTorchVision(os.path.join(conf['data_root'], 'trainA'), transform=transform)
+    dataset_b = ImageFolderTorchVision(os.path.join(conf['data_root'], 'trainB'), transform=transform)
+
+    for idx_dataset, _dataset in enumerate([dataset_a, dataset_b]):
+        _dataset.targets = [idx_dataset] * len(_dataset.imgs)
+        for idx_img, (img_path, label) in enumerate(_dataset.imgs):
+            # print(_dataset.imgs[idx_img])
+            _dataset.imgs[idx_img] = tuple((img_path, idx_dataset))
+
+    dataset_concat = ConcatDataset([dataset_a, dataset_b])
+
+    for _dataset in dataset_concat.datasets:
+        _dataset.class_to_idx = {'0': 0, '1': 1}
+        _dataset.classes = ['0', '1']
+
+    train_loader = DataLoader(dataset=dataset_concat, batch_size=batch_size, shuffle=True, drop_last=True, num_workers=num_workers)
+
+    return train_loader
 
 
 def get_data_loader_list(root, file_list, batch_size, train, new_size=None,
