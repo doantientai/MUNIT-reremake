@@ -22,6 +22,10 @@ class NormalNLLLoss:
     """
 
     def __call__(self, x, mu, var):
+        # print(x.shape)
+        # print(mu.shape)
+        # print(var.shape)
+        # exit()
         logli = -0.5 * (var.mul(2 * np.pi) + 1e-6).log() - (x - mu).pow(2).div(var.mul(2.0) + 1e-6)
         nll = -(logli.sum(1).mean())
 

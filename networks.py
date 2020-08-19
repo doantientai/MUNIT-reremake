@@ -66,6 +66,8 @@ class MsImageDis(nn.Module):
             dim *= 2
         cnn = []
         cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
+        cnn += [nn.Conv2d(dim, dim, 2, 2, 0)]
+        cnn += [nn.MaxPool2d(kernel_size=2, stride=2)]
         cnn += [Conv2dBlock(dim, 128, 2, 1, norm='bn', activation=self.activ, pad_type=self.pad_type)]
         cnn = nn.Sequential(*cnn)
         return cnn
