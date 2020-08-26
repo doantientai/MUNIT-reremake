@@ -18,8 +18,8 @@ import tensorboardX
 import shutil
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--config', type=str, default='configs/paint2real_portrait_folder.yaml', help='Path to the config file.')
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models256/003_paint2real', help="outputs path")
+parser.add_argument('--config', type=str, default='configs/cat2dog_folder.yaml', help='Path to the config file.')
+parser.add_argument('--output_path', type=str, default='/home/blaise/workdir/Tai/Projects/InfoMUNIT_workshop/Models256/004_cat2dog', help="outputs path")
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
