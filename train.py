@@ -29,7 +29,8 @@ parser = argparse.ArgumentParser()
 
 ############################ experiments on i size ###############################################
 parser.add_argument('--config', type=str, default='configs/edges2handbags_folder.yaml', help='Path to the config file.')
-parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/', help="outputs path")
+# parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/025_InfoMUNIT_infoLen_6/', help="outputs path")
 
 ##################################################################################################
 parser.add_argument("--resume", action="store_true")
