@@ -21,35 +21,24 @@ class MsImageDis(nn.Module):
     # Multi-scale discriminator architecture
     def __init__(self, input_dim, params):
         super(MsImageDis, self).__init__()
-        self.n_layer = params['n_layer']
-        self.gan_type = params['gan_type']
-        self.dim = params['dim']
-        self.norm = params['norm']
-        self.activ = params['activ']
-        self.num_scales = params['num_scales']
-        self.pad_type = params['pad_type']
+        self.n_layer = params['dis']['n_layer']
+        self.gan_type = params['dis']['gan_type']
+        self.dim = params['dis']['dim']
+        self.norm = params['dis']['norm']
+        self.activ = params['dis']['activ']
+        self.num_scales = params['dis']['num_scales']
+        self.pad_type = params['dis']['pad_type']
         self.input_dim = input_dim
         self.downsample = nn.AvgPool2d(3, stride=2, padding=[1, 1], count_include_pad=False)
-        # self.cnns = nn.ModuleList()
-        # for _ in range(self.num_scales):
-        #     self.cnns.append(self._make_net())
 
-        ## for the size 32x32, only one scale is used
         self.dis_root = self._make_dis_root()
-        # dim = self.dim
-        # cnn_x = []
-        # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
-        # for i in range(self.n_layer - 1):
-        #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
-        #     dim *= 2
-        # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
-        # self.cnn = nn.Sequential(*cnn_x)
         self.dis_branch_D = self._make_branch_d()
 
         self.dis_branch_Q = self._make_branch_q()
-        # self.conv_disc = nn.Conv2d(128, 10, 1)
-        self.conv_mu_Q = nn.Conv2d(128, 2, 1)
-        self.conv_var_Q = nn.Conv2d(128, 2, 1)
+
+        num_cont_code = params['info_dim']
+        self.conv_mu_Q = nn.Conv2d(128, num_cont_code, 1)
+        self.conv_var_Q = nn.Conv2d(128, num_cont_code, 1)
 
     def _make_branch_d(self):
         dim = self.dim
@@ -82,21 +71,10 @@ class MsImageDis(nn.Module):
         return cnn
 
     def forward(self, x):
-        # dim = self.dim
-        # cnn_x = []
-        # cnn_x += [Conv2dBlock(self.input_dim, dim, 4, 2, 1, norm='none', activation=self.activ, pad_type=self.pad_type)]
-        # for i in range(self.n_layer - 1):
-        #     cnn_x += [Conv2dBlock(dim, dim * 2, 4, 2, 1, norm=self.norm, activation=self.activ, pad_type=self.pad_type)]
-        #     dim *= 2
-        # cnn_x += [nn.Conv2d(dim, 1, 1, 1, 0)]
-        # cnn_x = nn.Sequential(*cnn_x)
         outputs = []
         output_root = self.dis_root(x)
-
         output_d = self.dis_branch_D(output_root)
-
         output_q = self.dis_branch_Q(output_root)
-        # disc_logits = self.conv_disc(output_q).squeeze()
         mu = self.conv_mu_Q(output_q).squeeze()
         var = torch.exp(self.conv_var_Q(output_q).squeeze())
 

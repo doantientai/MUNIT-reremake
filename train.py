@@ -24,8 +24,14 @@ parser = argparse.ArgumentParser()
 
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/001_edge2bag', help="outputs path")
 
-parser.add_argument('--config', type=str, default='configs/dogs2cats_folder.yaml', help='Path to the config file.')
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/dogs2cats_folder_debug', help="outputs path")
+# parser.add_argument('--config', type=str, default='configs/dogs2cats_folder.yaml', help='Path to the config file.')
+# parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/delme', help="outputs path")
+
+############################ experiments on i size ###############################################
+parser.add_argument('--config', type=str, default='configs/edges2handbags_folder.yaml', help='Path to the config file.')
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/ver_workshop/delme', help="outputs path")
+
+##################################################################################################
 parser.add_argument("--resume", action="store_true")
 parser.add_argument('--trainer', type=str, default='MUNIT', help="MUNIT|UNIT")
 opts = parser.parse_args()
@@ -41,10 +47,12 @@ config['vgg_model_path'] = opts.output_path
 # Setup model and data loader
 if opts.trainer == 'MUNIT':
     trainer = MUNIT_Trainer(config)
+    # print(trainer)
+    # exit()
 # elif opts.trainer == 'UNIT':
 #     trainer = UNIT_Trainer(config)
 else:
-    sys.exit("Only support MUNIT|UNIT")
+    sys.exit("Only support MUNIT")
 trainer.cuda()
 train_loader_a, train_loader_b, test_loader_a, test_loader_b = get_all_data_loaders(config)
 train_display_images_a = torch.stack([train_loader_a.dataset[i] for i in range(display_size)]).cuda()
