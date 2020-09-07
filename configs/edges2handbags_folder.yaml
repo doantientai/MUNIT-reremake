@@ -25,7 +25,7 @@ recon_s_w: 1                  # weight of style reconstruction loss
 recon_c_w: 1                  # weight of content reconstruction loss
 recon_x_cyc_w: 0              # weight of explicit style augmented cycle consistency loss
 vgg_w: 0                      # weight of domain-invariant perceptual loss
-info_dim: 1                   # number of digits in style code being used for mutual information
+info_dim: 4                   # number of digits in style code being used for mutual information
 
 # model options
 gen:
