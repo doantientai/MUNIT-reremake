@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser()
 
 ############################ experiments on i size ###############################################
 parser.add_argument('--config', type=str, default='configs/edges2handbags_folder.yaml', help='Path to the config file.')
-parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/033_InfoMUNIT_losses_wo_c', help="outputs path")
+parser.add_argument('--output_path', type=str, default='/media/tai/6TB/Projects/InfoMUNIT/Models/034_InfoMUNIT_losses_wo_adv', help="outputs path")
 # parser.add_argument('--output_path', type=str, default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/', help="outputs path")
 
 ##################################################################################################
@@ -77,7 +77,7 @@ while True:
 
         with Timer("Elapsed time in update: %f"):
             # Main training code
-            trainer.dis_update(images_a, images_b, config)
+            # trainer.dis_update(images_a, images_b, config)
             trainer.gen_update(images_a, images_b, config)
             torch.cuda.synchronize()
 

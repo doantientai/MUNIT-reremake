@@ -131,18 +131,18 @@ class MUNIT_Trainer(nn.Module):
         self.loss_gen_recon_x_b = self.recon_criterion(x_b_recon, x_b)
         self.loss_gen_recon_s_a = self.recon_criterion(s_a_recon, s_a)
         self.loss_gen_recon_s_b = self.recon_criterion(s_b_recon, s_b)
-        # self.loss_gen_recon_c_a = self.recon_criterion(c_a_recon, c_a)
-        # self.loss_gen_recon_c_b = self.recon_criterion(c_b_recon, c_b)
+        self.loss_gen_recon_c_a = self.recon_criterion(c_a_recon, c_a)
+        self.loss_gen_recon_c_b = self.recon_criterion(c_b_recon, c_b)
         # self.loss_gen_cycrecon_x_a = self.recon_criterion(x_aba, x_a) if hyperparameters['recon_x_cyc_w'] > 0 else 0
         # self.loss_gen_cycrecon_x_b = self.recon_criterion(x_bab, x_b) if hyperparameters['recon_x_cyc_w'] > 0 else 0
         # GAN loss
         # self.loss_gen_adv_a = self.dis_a.calc_gen_loss(x_ba)
         x_ba_dis_out = self.dis_a(x_ba)
-        self.loss_gen_adv_a = self.compute_gen_adv_loss(x_ba_dis_out)
+        # self.loss_gen_adv_a = self.compute_gen_adv_loss(x_ba_dis_out)
 
         # self.loss_gen_adv_b = self.dis_b.calc_gen_loss(x_ab)
         x_ab_dis_out = self.dis_b(x_ab)
-        self.loss_gen_adv_b = self.compute_gen_adv_loss(x_ab_dis_out)
+        # self.loss_gen_adv_b = self.compute_gen_adv_loss(x_ab_dis_out)
 
         # loss info continuous
         self.info_cont_loss_a = self.compute_info_cont_loss(s_a, x_ba_dis_out)
@@ -152,20 +152,20 @@ class MUNIT_Trainer(nn.Module):
         # self.loss_gen_vgg_a = self.compute_vgg_loss(self.vgg, x_ba, x_b) if hyperparameters['vgg_w'] > 0 else 0
         # self.loss_gen_vgg_b = self.compute_vgg_loss(self.vgg, x_ab, x_a) if hyperparameters['vgg_w'] > 0 else 0
         # total loss
-        self.loss_gen_total = hyperparameters['gan_w'] * self.loss_gen_adv_a + \
-                              hyperparameters['gan_w'] * self.loss_gen_adv_b + \
-                              hyperparameters['recon_x_w'] * self.loss_gen_recon_x_a + \
+        self.loss_gen_total = hyperparameters['recon_x_w'] * self.loss_gen_recon_x_a + \
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_a + \
                               hyperparameters['recon_s_w'] * self.loss_gen_recon_s_b + \
                               hyperparameters['recon_x_w'] * self.loss_gen_recon_x_b + \
+                              hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
+                              hyperparameters['recon_c_w'] * self.loss_gen_recon_c_a + \
                               self.info_cont_loss_a + \
                               self.info_cont_loss_b
-                              # hyperparameters['recon_c_w'] * self.loss_gen_recon_c_b + \
-                              # hyperparameters['recon_c_w'] * self.loss_gen_recon_c_a + \
                               # hyperparameters['vgg_w'] * self.loss_gen_vgg_b + \
                               # hyperparameters['vgg_w'] * self.loss_gen_vgg_a + \
                               # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_a + \
                               # hyperparameters['recon_x_cyc_w'] * self.loss_gen_cycrecon_x_b + \
+        # hyperparameters['gan_w'] * self.loss_gen_adv_a + \
+        # hyperparameters['gan_w'] * self.loss_gen_adv_b + \
         self.loss_gen_total.backward()
         self.gen_opt.step()
 
@@ -208,64 +208,64 @@ class MUNIT_Trainer(nn.Module):
         self.train()
         return x_a, x_a_recon, x_ab1, x_ab2, x_b, x_b_recon, x_ba1, x_ba2
 
-    def dis_update(self, x_a, x_b, hyperparameters):
-        self.dis_opt.zero_grad()
-        s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
-        s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
-        # encode
-        c_a, _ = self.gen_a.encode(x_a)
-        c_b, _ = self.gen_b.encode(x_b)
-        # decode (cross domain)
-        x_ba = self.gen_a.decode(c_b, s_a)
-        x_ab = self.gen_b.decode(c_a, s_b)
+    # def dis_update(self, x_a, x_b, hyperparameters):
+    #     self.dis_opt.zero_grad()
+    #     s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda())
+    #     s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda())
+    #     # encode
+    #     c_a, _ = self.gen_a.encode(x_a)
+    #     c_b, _ = self.gen_b.encode(x_b)
+    #     # decode (cross domain)
+    #     x_ba = self.gen_a.decode(c_b, s_a)
+    #     x_ab = self.gen_b.decode(c_a, s_b)
+    #
+    #     # D loss
+    #     # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
+    #     x_ba_dis_out = self.dis_a(x_ba.detach())
+    #     x_a_dis_out = self.dis_a(x_a)
+    #     self.loss_dis_a = self.compute_dis_loss(x_ba_dis_out, x_a_dis_out)
+    #     # self.loss_dis_b = self.dis_b.calc_dis_loss(x_ab.detach(), x_b)
+    #     x_ab_dis_out = self.dis_b(x_ab.detach())
+    #     x_b_dis_out = self.dis_b(x_b)
+    #     self.loss_dis_b = self.compute_dis_loss(x_ab_dis_out, x_b_dis_out)
+    #
+    #     self.loss_dis_total = hyperparameters['gan_w'] * self.loss_dis_a + hyperparameters['gan_w'] * self.loss_dis_b
+    #     self.loss_dis_total.backward()
+    #     self.dis_opt.step()
 
-        # D loss
-        # self.loss_dis_a = self.dis_a.calc_dis_loss(x_ba.detach(), x_a)
-        x_ba_dis_out = self.dis_a(x_ba.detach())
-        x_a_dis_out = self.dis_a(x_a)
-        self.loss_dis_a = self.compute_dis_loss(x_ba_dis_out, x_a_dis_out)
-        # self.loss_dis_b = self.dis_b.calc_dis_loss(x_ab.detach(), x_b)
-        x_ab_dis_out = self.dis_b(x_ab.detach())
-        x_b_dis_out = self.dis_b(x_b)
-        self.loss_dis_b = self.compute_dis_loss(x_ab_dis_out, x_b_dis_out)
+    # def compute_dis_loss(self, outs_fake, outs_real):
+    #     # calculate the loss to train D
+    #     # outs0 = self.forward(input_fake)
+    #     # outs1 = self.forward(input_real)
+    #     loss = 0
+    #     for it, (out_fake, out_real) in enumerate(zip(outs_fake, outs_real)):
+    #         out_fake = out_fake['output_d']
+    #         out_real = out_real['output_d']
+    #         if self.gan_type == 'lsgan':
+    #             loss += torch.mean((out_fake - 0) ** 2) + torch.mean((out_real - 1) ** 2)
+    #         elif self.gan_type == 'nsgan':
+    #             all0 = Variable(torch.zeros_like(out_fake.data).cuda(), requires_grad=False)
+    #             all1 = Variable(torch.ones_like(out_real.data).cuda(), requires_grad=False)
+    #             loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all0) +
+    #                                F.binary_cross_entropy(F.sigmoid(out_real), all1))
+    #         else:
+    #             assert 0, "Unsupported GAN type: {}".format(self.gan_type)
+    #     return loss
 
-        self.loss_dis_total = hyperparameters['gan_w'] * self.loss_dis_a + hyperparameters['gan_w'] * self.loss_dis_b
-        self.loss_dis_total.backward()
-        self.dis_opt.step()
-
-    def compute_dis_loss(self, outs_fake, outs_real):
-        # calculate the loss to train D
-        # outs0 = self.forward(input_fake)
-        # outs1 = self.forward(input_real)
-        loss = 0
-        for it, (out_fake, out_real) in enumerate(zip(outs_fake, outs_real)):
-            out_fake = out_fake['output_d']
-            out_real = out_real['output_d']
-            if self.gan_type == 'lsgan':
-                loss += torch.mean((out_fake - 0) ** 2) + torch.mean((out_real - 1) ** 2)
-            elif self.gan_type == 'nsgan':
-                all0 = Variable(torch.zeros_like(out_fake.data).cuda(), requires_grad=False)
-                all1 = Variable(torch.ones_like(out_real.data).cuda(), requires_grad=False)
-                loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all0) +
-                                   F.binary_cross_entropy(F.sigmoid(out_real), all1))
-            else:
-                assert 0, "Unsupported GAN type: {}".format(self.gan_type)
-        return loss
-
-    def compute_gen_adv_loss(self, outs_fake):
-        # calculate the loss to train G
-        # out_fake = self.forward(input_fake)
-        loss = 0
-        for it, (out_fake) in enumerate(outs_fake):
-            out_fake = out_fake['output_d']
-            if self.gan_type == 'lsgan':
-                loss += torch.mean((out_fake - 1) ** 2)  # LSGAN
-            elif self.gan_type == 'nsgan':
-                all1 = Variable(torch.ones_like(out_fake.data).cuda(), requires_grad=False)
-                loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all1))
-            else:
-                assert 0, "Unsupported GAN type: {}".format(self.gan_type)
-        return loss
+    # def compute_gen_adv_loss(self, outs_fake):
+    #     # calculate the loss to train G
+    #     # out_fake = self.forward(input_fake)
+    #     loss = 0
+    #     for it, (out_fake) in enumerate(outs_fake):
+    #         out_fake = out_fake['output_d']
+    #         if self.gan_type == 'lsgan':
+    #             loss += torch.mean((out_fake - 1) ** 2)  # LSGAN
+    #         elif self.gan_type == 'nsgan':
+    #             all1 = Variable(torch.ones_like(out_fake.data).cuda(), requires_grad=False)
+    #             loss += torch.mean(F.binary_cross_entropy(F.sigmoid(out_fake), all1))
+    #         else:
+    #             assert 0, "Unsupported GAN type: {}".format(self.gan_type)
+    #     return loss
 
     def update_learning_rate(self):
         if self.dis_scheduler is not None:
