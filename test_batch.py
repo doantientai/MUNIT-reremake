@@ -188,6 +188,36 @@ LIMIT_INPUT = 200
 # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/tests/test_batch_300k/b2a/b2a/', type=str, help="output image folder")
 # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
 
+############### experiments after ECCV, before WACV
+### Baseline: 003_edge2bag_64 checkpoint 800k
+
+# # parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/outputs/edges2handbags_folder/checkpoints/gen_00500000.pt', type=str, help="checkpoint of autoencoders")
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/outputs/edges2handbags_folder/checkpoints/gen_00800000.pt', type=str, help="checkpoint of autoencoders")
+# #
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/tests/test_batch_800k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/024_InfoMUNIT_infoLen_4/tests/test_batch_800k/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/026_InfoMUNIT_infoLen_8/outputs/edges2handbags_folder/checkpoints/gen_00610000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/026_InfoMUNIT_infoLen_8/tests/test_batch_800k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/026_InfoMUNIT_infoLen_8/tests/test_batch_800k/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/031_InfoMUNIT_losses_wo_x/outputs/edges2handbags_folder/checkpoints/gen_00660000.pt', type=str, help="checkpoint of autoencoders")
+# # parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testA', type=str, help="input image folder")
+# # parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/031_InfoMUNIT_losses_wo_x/tests/test_batch_660k/a2b/a2b/', type=str, help="output image folder")
+# # parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=1)
+# parser.add_argument('--input_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Data/edges2handbags/testB', type=str, help="input image folder")
+# parser.add_argument('--output_folder', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/031_InfoMUNIT_losses_wo_x/tests/test_batch_660k/b2a/b2a/', type=str, help="output image folder")
+# parser.add_argument('--a2b', type=int, help="1 for a2b and 0 for b2a", default=0)
+
+
 opts = parser.parse_args()
 
 

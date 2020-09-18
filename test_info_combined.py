@@ -21,35 +21,89 @@ parser = argparse.ArgumentParser()
 
 ############################### Run one test for all exp for the paper AIM ECCV 2020
 parser.add_argument('--config', default='configs/edges2handbags_folder.yaml', type=str)
+path_InfoMUNIT_workshop = "/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/"
 
-# path_InfoMUNIT_workshop = "/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/"
-#
+# # # ### 003_edge2bag_64
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/003_edge2bag_64/outputs/edges2handbags_folder/gen_00800000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2handbags/testA/194_AB.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/003_edge2bag_64/tests/test_latent_info/a2b/194', type=str)
+
+# # ### 004_edge2shoe_64: 177, 100, 143, 10
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/004_edge2shoe_64/outputs/edges2shoes_folder/checkpoints/gen_00800000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2shoes/testA/10_AB.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/004_edge2shoe_64/tests/test_latent_info/a2b/10', type=str)
+
 # # ### 005_MUNIT_origin_edge2bag_64 :100, 194, 23
-# parser.add_argument('--checkpoint',
-#                     default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/005_MUNIT_origin_edge2bag_64/outputs/edges2handbags_folder/gen_00800000.pt',
-#                     type=str)
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/005_MUNIT_origin_edge2bag_64/outputs/edges2handbags_folder/gen_00800000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2handbags/testA/100_AB.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/005_MUNIT_origin_edge2bag_64/tests/test_latent_info/a2b/100', type=str)
+
+# # ### 006_MUNIT_origin_edge2shoe_64: 177, 100, 143, 10
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/006_MUNIT_origin_edge2shoe_64/outputs/edges2shoes_folder/checkpoints/gen_00800000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2shoes/testA/177_AB.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/006_MUNIT_origin_edge2shoe_64/tests/test_latent_info/a2b/177', type=str)
+
+# # ### 018_MUNIT_origin_dog2catDRIT_64 499, 28 / 1382, 120
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/018_MUNIT_origin_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00100000.pt', type=str)
+# # parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# # parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/Dog2CatDRIT/cat2dog/testA/28.jpg')
+# # parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_latent_info/a2b/28', type=str)
+# parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/Dog2CatDRIT/cat2dog/testB/120.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/018_MUNIT_origin_dog2catDRIT_64/tests/test_latent_info/b2a/120', type=str)
+
+# # ### 019_InfoMUNIT_dog2catDRIT_64 499, 28 / 1382, 120
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/019_InfoMUNIT_dog2catDRIT_64/outputs/dogs2catsDRIT_folder/checkpoints/gen_00100000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/Dog2CatDRIT/cat2dog/testA/499.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/019_InfoMUNIT_dog2catDRIT_64/tests/test_latent_info/a2b/499', type=str)
+# # parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+# # parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/Dog2CatDRIT/cat2dog/testB/1382.jpg')
+# # parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/019_InfoMUNIT_dog2catDRIT_64/tests/test_latent_info/b2a/1382', type=str)
+
+# # ### 020_MUNIT_portrait_64
+# # george-stubbs_portrait-of-richard-wedgewood
+# # jean-francois-millet_louise-antoinette-feuardent-1841
+# # 089330
+# # 105059
+# parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/020_MUNIT_portrait_64/outputs/portrait_folder/checkpoints/gen_00200000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/portrait/testA/george-stubbs_portrait-of-richard-wedgewood.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/020_MUNIT_portrait_64/tests/test_latent_info/a2b/george-stubbs_portrait-of-richard-wedgewood', type=str)
+# # parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+# # parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/portrait/testB/105059.jpg')
+# # parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/020_MUNIT_portrait_64/tests/test_latent_info/b2a/105059', type=str)
+
+# ### 022_InfoMUNIT_portrait_64
+# george-stubbs_portrait-of-richard-wedgewood
+# jean-francois-millet_louise-antoinette-feuardent-1841
+# 089330
+# 105059
+parser.add_argument('--checkpoint', default='/home/jupyter/workdir/TaiDoan/Projects/InfoMUNIT_workshop/Models/022_InfoMUNIT_portrait_64/outputs/portrait_folder/checkpoints/gen_00200000.pt', type=str)
+# parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
+# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/portrait/testA/jean-francois-millet_louise-antoinette-feuardent-1841.jpg')
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/022_InfoMUNIT_portrait_64/tests/test_latent_info/a2b/jean-francois-millet_louise-antoinette-feuardent-1841', type=str)
+parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
+parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/portrait/testB/089330.jpg')
+parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/022_InfoMUNIT_portrait_64/tests/test_latent_info/b2a/089330', type=str)
+
+
+# ## debug on local
+# path_InfoMUNIT_workshop = "/media/tai/6TB/Projects/InfoMUNIT/"
+# # parser.add_argument('--checkpoint', type=str,
+# #                     default=path_InfoMUNIT_workshop + 'Models/ver_workshop/005_MUNIT_origin_edge2bag_64/outputs/edges2handbags_folder/gen_00800000.pt')
 # # parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
 # # parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2handbags/testA/23_AB.jpg')
 # # parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/005_MUNIT_origin_edge2bag_64/tests/test_latent_info/a2b/23', type=str)
-# parser.add_argument('--a2b', type=int, default=0, help="1 for a2b and 0 for b2a")
-# parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop + 'Data/edges2handbags/testB/100_AB.jpg')
-# parser.add_argument('--output_folder',
-#                     default=path_InfoMUNIT_workshop + 'Models/005_MUNIT_origin_edge2bag_64/tests/test_latent_info/b2a/100',
-#                     type=str)
 
-## debug on local
-path_InfoMUNIT_workshop = "/media/tai/6TB/Projects/InfoMUNIT/"
-# parser.add_argument('--checkpoint', type=str,
-#                     default=path_InfoMUNIT_workshop + 'Models/ver_workshop/005_MUNIT_origin_edge2bag_64/outputs/edges2handbags_folder/gen_00800000.pt')
+# parser.add_argument('--checkpoint', type=str, default=path_InfoMUNIT_workshop+'Models/003_edge2bag_64/outputs/edges2handbags_folder/checkpoints/gen_00800000.pt')
 # parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
 # parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2handbags/testA/23_AB.jpg')
-# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/005_MUNIT_origin_edge2bag_64/tests/test_latent_info/a2b/23', type=str)
-
-parser.add_argument('--checkpoint', type=str,
-                    default=path_InfoMUNIT_workshop+'Models/003_edge2bag_64/outputs/edges2handbags_folder/checkpoints/gen_00800000.pt')
-parser.add_argument('--a2b', type=int, default=1, help="1 for a2b and 0 for b2a")
-parser.add_argument('--input', type=str, default=path_InfoMUNIT_workshop+'Data/edges2handbags/testA/23_AB.jpg')
-parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/003_edge2bag_64/tests/test_latent_info/a2b/23', type=str)
+# parser.add_argument('--output_folder', default=path_InfoMUNIT_workshop+'Models/003_edge2bag_64/tests/test_latent_info/a2b/23', type=str)
 
 
 parser.add_argument('--style', type=str, default='', help="style image path")
